@@ -5,20 +5,21 @@ This file describes the technology stack in use on this project.
 All agents must consult this before making implementation or tooling decisions.
 
 ---
-
 ## Languages and frameworks
-| Layer        | Technology                  | Notes                                      |
-|--------------|-----------------------------|--------------------------------------------|
-| Backend      | Java 17 / Spring Boot 3.x   | Preferred for new services                 |
-| Frontend     | GOV.UK Frontend (Nunjucks)  | Mandatory for user-facing UI               |
-| Frontend alt | Node.js / Express           | For BFF / rendering layers                 |
-| Scripting    | Groovy (Jenkins pipelines)  |                                            |
+| Layer        | Technology                | Notes                                      |
+|--------------|---------------------------|--------------------------------------------|
+| Backend      | Java 25 / Spring Boot 3.x | Preferred for new services                 |
+| Frontend     | govuk-frontend            | GOV.UK Design System for consistent government UI patterns|
+|              |  ngrx                     | Reactive state management                  |
+|              |    ngx-bootstrap          |   UI component library |
+|              |    Jest or Jasmine        |  Unit testing|
+| Scripting    | Github                    |                                            |
 
 ## Databases
-| Type         | Technology      | Notes                                      |
-|--------------|-----------------|--------------------------------------------|
-| Relational   | PostgreSQL 14+  | Via Azure Flexible Server or AKS           |
-| Cache        | Redis           | Session and feature flag caching           |
+| Type         | Technology    | Notes                                      |
+|--------------|---------------|--------------------------------------------|
+| Relational   | PostgreSQL 16 | Via Azure Flexible Server or AKS           |
+| Cache        | Redis         | Session and feature flag caching           |
 
 ## Messaging / eventing
 | Use case     | Technology           | Notes                                      |

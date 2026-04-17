@@ -18,7 +18,6 @@ This is a human gate — a human engineer must approve before the pipeline conti
 - If clean: PR labelled `claude-approved` — human reviewer then makes final call
 
 ## Instructions
-
 ### Step 1 — Load the diff
 Pull the full diff for the PR via GitHub MCP. Also load:
 - The story file to understand intent
