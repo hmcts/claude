@@ -1,0 +1,17 @@
+{
+  "name": "cpp-claude",
+  "owner": {
+    "name": "HMCTS Common Platform"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for Common Platform development",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "cp-architecture",
+      "source": "./plugins/cp-architecture",
+      "description": "LikeC4 architecture model awareness and drift-check for cp-context-* services"
+    }
+  ]
+}

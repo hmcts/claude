@@ -1,0 +1,9 @@
+{
+  "name": "cp-architecture",
+  "version": "0.1.0",
+  "description": "LikeC4 architecture model awareness and drift-check for cp-context-* services",
+  "author": {
+    "name": "HMCTS Common Platform"
+  },
+  "license": "MIT"
+}

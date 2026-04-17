@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "cp-c4-architecture": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/c4-mcp-wrapper.sh",
+      "env": {
+        "C4_REPO_URL": "https://github.com/hmcts/cp-c4-architecture.git"
+      }
+    }
+  }
+}
