@@ -17,7 +17,7 @@ Scaffolds a new CPP Modern by Default service following the established patterns
 
 Ask the user for:
 
-1. **Service name** — e.g., `cpp-mbd-court-schedule` (must start with `cpp-mbd-`)
+1. **Service name** — e.g., `cp-mbd-court-schedule` (must start with `cp-mbd-`)
 2. **Bounded context** — e.g., `court-schedule`
 3. **Service type** — one of:
    - **Event processor** — consumes events from Service Bus, transforms, dispatches (like IDAM integration)
