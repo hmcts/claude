@@ -4,11 +4,28 @@
 This file describes the technology stack in use on this project.
 All agents must consult this before making implementation or tooling decisions.
 
+## Master source for Spring Boot apps
+The canonical, authoritative definitions for a Spring Boot service or API repo
+are the HMCTS templates:
+
+- **Service:** [`hmcts/service-hmcts-crime-springboot-template`](https://github.com/hmcts/service-hmcts-crime-springboot-template) — runtime Spring Boot service (Spring Boot 4.0.5, Java 25, Gradle 9.4.1, Flyway, Postgres, OpenTelemetry, logstash JSON logging, PMD, CycloneDX, App Insights agent).
+- **API spec:** [`hmcts/api-hmcts-crime-template`](https://github.com/hmcts/api-hmcts-crime-template) — OpenAPI spec repo with naming rules, validation tooling, publishing workflows.
+- **Reference examples:** [`hmcts/service-hmcts-springboot-demo`](https://github.com/hmcts/service-hmcts-springboot-demo) — look at the Spring Boot 4 modules only (`postgres-springboot4`). Ignore the Spring Boot 3 demo modules.
+
+Skills [`springboot-service-from-template`](../skills/springboot-service-from-template/SKILL.md) and [`springboot-api-from-template`](../skills/springboot-api-from-template/SKILL.md) walk through adopting them. Do not scaffold Spring Boot apps from scratch; when the template updates, the service picks the update up by refresh, not by duplication.
+
+## Azure-first posture
+HMCTS runs on Azure. Cloud-native decisions are governed by
+[`azure-cloud-native.md`](./azure-cloud-native.md); Azure SDK usage and
+Managed Identity patterns by [`azure-sdk-guide.md`](./azure-sdk-guide.md);
+logging by [`logging-standards.md`](./logging-standards.md). Cost and
+vendor-lock-in rebuttals are in [`cloud-adoption-rationale.md`](./cloud-adoption-rationale.md) — on-demand only.
+
 ---
 ## Languages and frameworks
 | Layer        | Technology                | Notes                                      |
 |--------------|---------------------------|--------------------------------------------|
-| Backend      | Java 25 / Spring Boot 3.x | Preferred for new services                 |
+| Backend      | Java 25 / Spring Boot 4.0.5 / Gradle 9.4.1 | Canonical versions track the HMCTS templates (see below) |
 | Frontend     | govuk-frontend            | GOV.UK Design System for consistent government UI patterns|
 |              |  ngrx                     | Reactive state management                  |
 |              |    ngx-bootstrap          |   UI component library |
@@ -58,11 +75,13 @@ All agents must consult this before making implementation or tooling decisions.
 | UI E2E       | Playwright or Selenium 4         |
 
 ## Monitoring
-| Component    | Technology              |
-|--------------|-------------------------|
-| Logs         | Azure Monitor / Log Analytics |
-| Metrics      | Azure Monitor, Prometheus |
-| Alerts       | PagerDuty               |
+| Component    | Technology              | Notes |
+|--------------|-------------------------|-------|
+| Logs         | Azure Monitor / Log Analytics | JSON to stdout via logstash-logback-encoder — see `logging-standards.md` |
+| Metrics      | Azure Monitor, Prometheus | Micrometer → `/actuator/prometheus`, tags `service`/`cluster`/`region` |
+| Tracing      | OpenTelemetry → Azure Monitor | `spring-boot-starter-opentelemetry`; OTLP exporter |
+| APM          | Application Insights    | Injected via the Java agent at image build time — **do not** embed the App Insights SDK in code |
+| Alerts       | PagerDuty               | |
 
 ---
 

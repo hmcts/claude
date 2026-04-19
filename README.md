@@ -58,9 +58,10 @@ Reusable skills in `.claude/skills/`:
 | `accessibility-check` | WCAG 2.1 AA review of UI components |
 | `review-checklist` | Code review pass/fail checklist |
 | `adr-template` | Record architecture decisions |
-| `mbd-bootstrap` | Scaffold a new Modern by Default Spring Boot service |
-| `context-service-guide` | Navigate and understand `cpp-context-*` services |
-| `context-scaffold` | Scaffold modules, commands, queries, events within a context service |
+| `springboot-service-from-template` | Stand up a new Spring Boot service using the HMCTS template (`service-hmcts-crime-springboot-template`) as master source |
+| `springboot-api-from-template` | Stand up a new HMCTS Marketplace API spec repo from the `api-hmcts-crime-template` |
+| `context-service-guide` | **Legacy only.** Navigate existing `cpp-context-*` WildFly services — patterns must not bleed into new Spring Boot work |
+| `context-scaffold` | **Legacy only.** Scaffold modules/commands/queries/events within a WildFly context service |
 | `review-pr` | Review a pull request |
 | `terraform-validate` | Validate Terraform modules and configurations |
 | `dependency-audit` | Audit dependency versions across repos |
@@ -84,9 +85,13 @@ Shared context in `.claude/context/` that agents load automatically:
 
 | File | Contents |
 |------|----------|
-| `tech-stack.md` | Languages, frameworks, databases, infrastructure, CI/CD, and test tooling |
-| `hmcts-standards.md` | GDS, accessibility, security, coding, and data protection standards |
-| `coding-standards.md` | Java/Spring Boot conventions, commit message format, PR hygiene |
+| `tech-stack.md` | Languages, frameworks, databases, infrastructure, CI/CD, and test tooling. Points to the HMCTS templates as Spring Boot master source |
+| `hmcts-standards.md` | GDS, accessibility, security, coding, Cloud-Native posture, and data protection standards |
+| `coding-standards.md` | Java/Spring Boot conventions, commit message format, PR hygiene, logging and dependency rules |
+| `azure-cloud-native.md` | Cloud-Native posture on Azure + Shared Responsibility Model (auto-loaded) |
+| `logging-standards.md` | Mandatory JSON logging for Spring Boot services (auto-loaded) |
+| `azure-sdk-guide.md` | Azure SDK usage + Managed Identity patterns (on-demand, loaded by skills) |
+| `cloud-adoption-rationale.md` | Rebuttals to "vendor lock-in" and "cloud is too expensive" arguments (**on-demand only**, not auto-loaded) |
 
 ## Hard rules
 
@@ -102,13 +107,15 @@ These are enforced across all agents and stages:
 
 ## Tech stack summary
 
-- **Backend**: Java 25 / Spring Boot 4.x
+- **Backend**: Java 25 / Spring Boot 4.0.5 / Gradle 9.4.1 — **master source is the HMCTS template** [`hmcts/service-hmcts-crime-springboot-template`](https://github.com/hmcts/service-hmcts-crime-springboot-template)
+- **API specs**: OpenAPI, from the template [`hmcts/api-hmcts-crime-template`](https://github.com/hmcts/api-hmcts-crime-template)
 - **Frontend**: GOV.UK Frontend, ngrx, ngx-bootstrap
 - **Database**: PostgreSQL 16, Redis
-- **Messaging**: Azure Service Bus
+- **Messaging**: Azure Service Bus (via Azure SDK + Managed Identity)
 - **Infrastructure**: Azure AKS, Flux CD, Helm 3
 - **CI/CD**: GitHub Actions, Gradle, SonarQube, Snyk
-- **Testing**: JUnit 5, Cucumber 7 + Serenity BDD, Pact, Playwright, axe-core
+- **Observability**: JSON logs to stdout (logstash-logback-encoder), Micrometer + Prometheus, OpenTelemetry, Application Insights Java agent
+- **Testing**: JUnit 5, Cucumber 7 + Serenity BDD, Pact, Playwright, axe-core, Testcontainers
 
 
 ### Contribute to This Repository

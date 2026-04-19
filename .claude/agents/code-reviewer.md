@@ -9,6 +9,9 @@ This is a human gate — a human engineer must approve before the pipeline conti
 - Feature branch PR via GitHub MCP
 - context/hmcts-standards.md
 - context/coding-standards.md
+- context/azure-cloud-native.md
+- context/logging-standards.md
+- context/azure-sdk-guide.md (if the PR touches any Azure integration)
 - skill: skills/review-checklist.md
 
 ## Output
@@ -57,6 +60,22 @@ Mark each item: PASS / FAIL / N/A with a brief note.
 - Tests assert behaviour, not implementation detail
 - No tests that always pass regardless of code changes
 - Test data does not contain real PII or court reference numbers
+
+**Spring Boot template alignment**
+- `build.gradle`, `gradle/*.gradle`, `Dockerfile`, `logback.xml`, and `.github/workflows/` have not diverged from the HMCTS templates without an ADR
+- Java package, `spring.application.name`, and `management.metrics.tags.service` are consistent with the repo name and naming conventions
+
+**Logging (JSON is mandatory)**
+- `logstash-logback-encoder` + `LoggingEventCompositeJsonEncoder` config from the template is in place; not replaced with a bespoke config
+- Every request populates MDC with `correlationId` and `requestId`
+- No secrets, PII, full request/response bodies, Authorization/Cookie headers, or raw stack traces surface in logs or HTTP responses
+
+**Azure / Cloud-Native**
+- Azure integrations use the Azure SDK via `DefaultAzureCredential` (Managed Identity)
+- No connection strings, SAS tokens, or account keys in code, `application.yaml`, env vars, or Helm values
+- Container runs as non-root (`USER app`); base image sourced from HMCTS ACR
+- Liveness (`/actuator/health/liveness`) and readiness (`/actuator/health/readiness`) probes wired in Helm and respond 200 locally
+- Graceful shutdown, HTTP/2, forward-headers, and compression settings from the template are intact
 
 ### Step 4 — Post review
 Post the structured review report as a PR comment via GitHub MCP.

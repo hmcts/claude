@@ -1,7 +1,13 @@
 ---
 name: context-scaffold
-description: Scaffold new modules, commands, queries, events, or viewstore entities within an existing cpp-context-* service. Use when adding new capabilities to a context service.
+description: Scaffold new modules, commands, queries, events, or viewstore entities within an existing legacy cpp-context-* WildFly service. LEGACY ONLY — must not be applied to new Spring Boot work.
 ---
+
+> ⚠️ **Legacy WildFly context services only.** The CQRS scaffolding here — `-command-api`, `-query-api`, `-domain-event`, viewstore + Liquibase, subscriptions-descriptor — is **specific to the WildFly-era `cpp-context-*` stack**. Do **not** copy these patterns into a Spring Boot service. Spring Boot services are layered (Controller → Service → Repository with MapStruct), not CQRS.
+>
+> For **new Spring Boot services**, use `skills/springboot-service-from-template/`.
+> For **new HMCTS Marketplace API specs**, use `skills/springboot-api-from-template/`.
+> If a domain genuinely needs CQRS in a new Spring Boot service, that is an ADR-worthy deviation — raise it explicitly rather than importing this skill's patterns.
 
 # Context Service Scaffold
 

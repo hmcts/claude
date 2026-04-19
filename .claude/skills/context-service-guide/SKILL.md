@@ -1,7 +1,13 @@
 ---
 name: context-service-guide
-description: Navigate and understand any cpp-context-* service. Use when onboarding to a context service, exploring its modules, or understanding its CQRS structure and integrations.
+description: Navigate and understand any legacy cpp-context-* WildFly/Maven service. LEGACY ONLY — must not be applied to new Spring Boot work. Use when onboarding to a context service, exploring its modules, or understanding its CQRS structure and integrations.
 ---
+
+> ⚠️ **Legacy WildFly context services only.** The patterns in this skill — `cpp-context-*` Maven multi-modules, `-command-api` / `-query-api` / `-domain-event`, RAML, custom CQRS plumbing, `subscriptions-descriptor.yaml` — are **WildFly-era patterns and must not be applied to new Spring Boot services**. They exist here to help engineers onboard to existing services.
+>
+> For **new Spring Boot services**, use `skills/springboot-service-from-template/`.
+> For **new HMCTS Marketplace API specs**, use `skills/springboot-api-from-template/`.
+> Cross-pollinating these patterns into a Spring Boot service is a design regression — the master source for Spring Boot is the HMCTS template (see `context/tech-stack.md`).
 
 # Context Service Guide
 
