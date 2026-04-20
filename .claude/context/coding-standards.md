@@ -36,14 +36,23 @@ src/
 - Log at WARN for expected business errors, ERROR for unexpected failures
 
 ### Logging
-- Use SLF4J with structured log fields where possible
-- Log correlation IDs on every request (`X-Request-ID`)
-- Never log: passwords, tokens, full request bodies, case party names, dates of birth
+- JSON logging to stdout is mandatory for Spring Boot services. The authoritative rules are in `context/logging-standards.md` and the template config at `service-hmcts-crime-springboot-template/src/main/resources/logback.xml`. Do not maintain alternative configs.
+- Use SLF4J; `logstash-logback-encoder` as the JSON encoder.
+- Populate MDC with `correlationId` and `requestId` on every request.
+- Never log: passwords, tokens, JWTs, full request/response bodies, PII, case party names, case reference numbers, dates of birth, Authorization/Cookie headers, or raw stack traces in HTTP responses.
 
 ### Dependencies
 - Manage versions in `build.gradle` dependency constraints block — not per-dependency
 - Use Spring Boot BOM for Spring dependencies — do not override versions without reason
 - Every new dependency needs a comment: why it was added and what it replaces (if anything)
+
+### Spring Boot services — template is the master source
+- New Spring Boot services and API repos start from the HMCTS templates (see `context/tech-stack.md`). Use `skills/springboot-service-from-template/` and `skills/springboot-api-from-template/`.
+- Do not regenerate `build.gradle`, the `gradle/*.gradle` includes, `Dockerfile`, `logback.xml`, or `.github/workflows/` locally — these belong to the template.
+- Any deviation from the template's structure requires an ADR.
+
+### Azure integrations
+- Authenticate to Azure services with Managed Identity via `DefaultAzureCredential`. No connection strings, SAS tokens, or account keys in code, `application.yaml`, env vars, or Helm values. See `context/azure-sdk-guide.md`.
 
 ---
 

@@ -10,6 +10,9 @@ red → green → refactor cycle. Never write code ahead of a failing test.
 - context/tech-stack.md (language, framework, patterns in use)
 - context/hmcts-standards.md (coding standards, security rules)
 - context/coding-standards.md
+- context/azure-cloud-native.md (Cloud-Native posture on Azure)
+- context/logging-standards.md (mandatory JSON logging)
+- context/azure-sdk-guide.md (load when the work touches any Azure integration)
 
 ## Output
 - Production code committed to the feature branch
@@ -17,6 +20,16 @@ red → green → refactor cycle. Never write code ahead of a failing test.
 - No new linting errors or Snyk critical/high findings introduced
 
 ## Instructions
+
+### Step 0 — If this is a new Spring Boot service or API repo
+For new Spring Boot services, start from skill: `skills/springboot-service-from-template/`.
+For new API spec repos, start from skill: `skills/springboot-api-from-template/`.
+Do **not** generate `build.gradle`, the `gradle/*.gradle` includes, `Dockerfile`,
+`logback.xml`, or `.github/workflows/` from scratch — those are owned by the
+HMCTS templates. Any deviation from the template structure requires an ADR.
+
+If modifying an existing service, confirm it aligns with the template conventions
+before adding to it.
 
 ### Step 1 — Run the tests first
 Before writing any code, run the test suite to confirm the stubs are failing.
@@ -46,6 +59,11 @@ Before committing, check:
 - Input validation on all externally supplied values
 - Error handling returns appropriate HTTP status codes (no raw stack traces)
 - Code conforms to context/coding-standards.md
+- **Spring Boot template alignment** — `build.gradle`, `gradle/*.gradle`, `Dockerfile`, `logback.xml`, and `.github/workflows/` have not been locally modified outside of genuinely service-specific values; if they have, an ADR exists explaining why
+- **JSON logging** — logs emitted to stdout are valid JSON with `correlationId` and `requestId` in the MDC; the `logstash-logback-encoder` config has not been replaced (see context/logging-standards.md)
+- **Azure integrations** — all Azure service access is via the Azure SDK with `DefaultAzureCredential` (Managed Identity); no connection strings, SAS tokens, or account keys anywhere (see context/azure-sdk-guide.md)
+- **Container** — runs as non-root (`USER app`); base image sourced from HMCTS ACR
+- **Probes** — `/actuator/health/readiness` and `/actuator/health/liveness` respond 200 locally
 
 ### Step 5 — Commit
 Commit to the feature branch via GitHub MCP.
