@@ -1,11 +1,11 @@
 ---
 name: terraform-validate
-description: Validate Terraform modules and configurations across CPP infrastructure repos. Use when checking Terraform code, reviewing infrastructure changes, or verifying module consistency.
+description: Validate Terraform modules and configurations across CP infrastructure repos. Use when checking Terraform code, reviewing infrastructure changes, or verifying module consistency.
 ---
 
 # Terraform Validate
 
-Validates Terraform modules and configurations across CPP infrastructure repositories for consistency, security, and best practices.
+Validates Terraform modules and configurations across CP infrastructure repositories for consistency, security, and best practices.
 
 ## When to Use
 
@@ -57,7 +57,7 @@ Every Terraform repo should have:
 
 #### Resource Configuration
 - [ ] All resources have consistent tagging (environment, team, service)
-- [ ] Resource names follow CPP naming convention: `{resource-type}-{env}-{purpose}`
+- [ ] Resource names follow CP naming convention: `{resource-type}-{env}-{purpose}`
 - [ ] No hardcoded values that should be variables
 - [ ] Lifecycle rules specified where appropriate (prevent_destroy for stateful resources)
 
@@ -124,7 +124,7 @@ For root modules that consume reusable modules:
 - [severity] [description] — suggested fix
 ```
 
-## CPP-Specific Infrastructure Patterns
+## CP-Specific Infrastructure Patterns
 
 ### AKS Clusters
 - System + Worker + Prometheus node pools

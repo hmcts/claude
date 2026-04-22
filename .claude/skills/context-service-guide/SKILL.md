@@ -11,7 +11,7 @@ description: Navigate and understand any legacy cpp-context-* WildFly/Maven serv
 
 # Context Service Guide
 
-Provides a structured walkthrough of any CPP context service repository to help developers quickly understand its purpose, structure, integrations, and development workflow.
+Provides a structured walkthrough of any CP context service repository to help developers quickly understand its purpose, structure, integrations, and development workflow.
 
 ## When to Use
 
@@ -43,7 +43,7 @@ From the POM dependencies and event sources, identify:
 - **Upstream contexts** — which other context services publish events this service consumes
 - **Downstream contexts** — which contexts consume this service's domain events
 - **Shared components used** — audit, auth, reference data, file service, notifications, etc.
-- **External systems** — any SOAP/REST integrations with systems outside CPP
+- **External systems** — any SOAP/REST integrations with systems outside CP
 
 ### Step 4: Identify Module Structure
 
