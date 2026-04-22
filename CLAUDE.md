@@ -34,15 +34,17 @@ Run stages in order. Do not skip or reorder. Halt at every human gate before pro
 
 ## Shared skills (available to all agents)
 
-| Skill file                              | Use when                                      |
-|-----------------------------------------|-----------------------------------------------|
-| skills/write-acceptance-criteria.md        | Deriving testable ACs from any requirement    |
-| skills/generate-bdd-specs.md               | Writing Cucumber/Gherkin feature files        |
-| skills/accessibility-check.md              | WCAG 2.1 AA review of any UI component        |
-| skills/review-checklist.md                 | Code review pass/fail checklist               |
-| skills/adr-template.md                     | Recording any architecture decision           |
-| skills/springboot-service-from-template/   | Standing up a new Spring Boot service from the HMCTS template |
-| skills/springboot-api-from-template/       | Standing up a new HMCTS Marketplace API spec repo |
+Skills split across the marketplace and this repo. Install the marketplace plugins once (see the repo README "Prerequisite" section) — the file paths below resolve to pointer stubs or HMCTS overlays that reference the installed plugins.
+
+| Skill file                              | Source                            | Use when                                      |
+|-----------------------------------------|-----------------------------------|-----------------------------------------------|
+| skills/write-acceptance-criteria.md     | marketplace: `bdd-workflow`       | Deriving testable ACs from any requirement    |
+| skills/generate-bdd-specs.md            | marketplace: `bdd-workflow`       | Writing Cucumber/Gherkin feature files        |
+| skills/accessibility-check.md           | marketplace: `accessibility-check` + HMCTS overlay | WCAG 2.1 AA review + GOV.UK Frontend guidance |
+| skills/review-checklist.md              | marketplace: `review-checklist` + HMCTS overlay    | Code review checklist + Spring Boot / Azure / logging |
+| skills/adr-template.md                  | marketplace: `adr-template`       | Recording any architecture decision           |
+| skills/springboot-service-from-template/| local (HMCTS-specific)            | Standing up a new Spring Boot service from the HMCTS template |
+| skills/springboot-api-from-template/    | local (HMCTS-specific)            | Standing up a new HMCTS Marketplace API spec repo |
 
 ---
 
