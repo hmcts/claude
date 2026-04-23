@@ -4,9 +4,22 @@ Shared [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configurati
 
 ## Installation
 
-Currently, clone this repo into your project's `.claude/` directory (or symlink it) so Claude Code picks up the configuration automatically.
+Clone this repo into your project's `.claude/` directory (or symlink it) so Claude Code picks up the configuration automatically.
 
-We are working on an [HMCTS Agentic Plugins Marketplace](https://github.com/hmcts/agentic-plugins-marketplace) that will allow you to install these agents, skills, and commands directly into your project without manually copying files. Stay tuned.
+### Prerequisite — install the agentic plugins marketplace
+
+This repo now depends on the [HMCTS Agentic Plugins Marketplace](https://github.com/hmcts/agentic-plugins-marketplace) for generic, reusable skills (ADRs, BDD workflow, accessibility checks, code review checklist). HMCTS-specific logic stays here as overlays.
+
+Add the marketplace once:
+
+```
+/plugin
+→ Marketplaces tab → Add: hmcts/agentic-plugins-marketplace
+```
+
+The five required plugins (`adr-template`, `bdd-workflow`, `accessibility-check`, `review-checklist`, `openspec`) auto-enable via `.claude/settings.json` in this repo — no individual `/plugin install` calls needed. Run `/reload-plugins` after adding the marketplace and they load automatically.
+
+**One extra prerequisite for `openspec`**: the `openspec` CLI binary must be on your `PATH`. Install it separately before using the `openspec-*` skills — see the [OpenSpec upstream installation instructions](https://github.com/Fission-AI/OpenSpec#installation).
 
 ## What's included
 
@@ -49,15 +62,22 @@ Specialised agents in `.claude/agents/`:
 
 ### Skills
 
-Reusable skills in `.claude/skills/`:
+Skills fall into two groups: those that live in the marketplace (install via `/plugin`) and those that stay in this repo because they are HMCTS- or CPP-specific.
+
+**From the marketplace** (generic — install via `/plugin install <name>@agentic-plugins-marketplace`):
 
 | Skill | Purpose |
 |-------|---------|
-| `write-acceptance-criteria` | Derive testable ACs from requirements |
-| `generate-bdd-specs` | Write Cucumber/Gherkin feature files |
-| `accessibility-check` | WCAG 2.1 AA review of UI components |
-| `review-checklist` | Code review pass/fail checklist |
-| `adr-template` | Record architecture decisions |
+| `adr-template` | Record architecture decisions in a consistent ADR format |
+| `bdd-workflow` | Write acceptance criteria AND turn them into Gherkin (bundled: `write-acceptance-criteria` + `generate-bdd-specs`) |
+| `accessibility-check` | WCAG 2.1 AA via axe-core + manual checks. HMCTS overlay at `.claude/skills/accessibility-check.md` adds GOV.UK Frontend guidance |
+| `review-checklist` | Code review pass/fail checklist. HMCTS overlay at `.claude/skills/review-checklist.md` adds Spring Boot / Azure / logging checks |
+| `openspec` | OpenSpec workflow — `explore`, `propose`, `apply-change`, `archive-change` bundled. Requires the `openspec` CLI. The `/opsx:*` commands in this repo remain and are parallel implementations of the same logic |
+
+**In this repo** (HMCTS- or CPP-specific, stays local):
+
+| Skill | Purpose |
+|-------|---------|
 | `springboot-service-from-template` | Stand up a new Spring Boot service using the HMCTS template (`service-hmcts-crime-springboot-template`) as master source |
 | `springboot-api-from-template` | Stand up a new HMCTS Marketplace API spec repo from the `api-hmcts-crime-template` |
 | `context-service-guide` | **Legacy only.** Navigate existing `cpp-context-*` WildFly services — patterns must not bleed into new Spring Boot work |

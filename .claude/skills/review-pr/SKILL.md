@@ -1,11 +1,11 @@
 ---
 name: review-pr
-description: Review a pull request for a CPP repository. Use when asked to review a PR, check code changes, or provide feedback on a pull request.
+description: Review a pull request for a CP repository. Use when asked to review a PR, check code changes, or provide feedback on a pull request.
 ---
 
 # PR Review for Common Platform
 
-Reviews pull requests against CPP coding standards, architectural patterns, and platform conventions.
+Reviews pull requests against CP coding standards, architectural patterns, and platform conventions.
 
 ## When to Use
 

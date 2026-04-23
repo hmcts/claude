@@ -5,7 +5,7 @@ description: Debug and understand Azure DevOps pipeline configurations. Use when
 
 # Pipeline Debug
 
-Helps debug, understand, and configure Azure DevOps pipelines across CPP repositories by tracing template references, variable resolution, and pipeline structure.
+Helps debug, understand, and configure Azure DevOps pipelines across CP repositories by tracing template references, variable resolution, and pipeline structure.
 
 ## When to Use
 
@@ -22,7 +22,7 @@ Read the repo's `azure-pipelines.yml` (or `azure-pipelines.yaml`). This is the e
 
 ### Step 2: Trace Template References
 
-CPP pipelines use shared templates from `cpp-azure-devops-templates`. Template references look like:
+CP pipelines use shared templates from `cpp-azure-devops-templates`. Template references look like:
 
 ```yaml
 resources:
@@ -124,4 +124,4 @@ For deployment-related issues, also check:
 - `cpp-aks-deploy/aks-deploy.yaml` — main AKS deployment pipeline
 - `cpp-aks-deploy/helmsman.toml` — Helmsman deployment configuration
 - `cpp-aks-deploy/helmsman_vars/*.env` — environment-specific variables
-- Approval gates: non-live auto-resumes on timeout; live requires CPP DevOps SC approval
+- Approval gates: non-live auto-resumes on timeout; live requires CP DevOps SC approval

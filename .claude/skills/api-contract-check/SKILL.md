@@ -5,7 +5,7 @@ description: Validate API contracts (RAML/JSON Schema/OpenAPI) against their imp
 
 # API Contract Check
 
-Validates that API definitions (RAML, JSON Schema, OpenAPI) match their implementations across CPP services.
+Validates that API definitions (RAML, JSON Schema, OpenAPI) match their implementations across CP services.
 
 ## When to Use
 
@@ -105,7 +105,7 @@ When context A consumes events from context B:
 
 ## Common Content-Type Patterns
 
-CPP uses custom media types for command routing:
+CP uses custom media types for command routing:
 
 ```
 application/vnd.{context}.command.{action-name}+json
