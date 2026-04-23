@@ -1,0 +1,32 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch marketplace repo for cross-repo checks
+        uses: actions/checkout@v4
+        with:
+          repository: hmcts/agentic-plugins-marketplace
+          ref: main
+          path: _marketplace
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Run validator
+        run: python scripts/validate_claude_config.py --marketplace-path _marketplace
