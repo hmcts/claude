@@ -17,15 +17,9 @@ Add the marketplace once:
 → Marketplaces tab → Add: hmcts/agentic-plugins-marketplace
 ```
 
-Then install the generic plugins (bundled in the marketplace's `.claude/settings.json`):
+The five required plugins (`adr-template`, `bdd-workflow`, `accessibility-check`, `review-checklist`, `openspec`) auto-enable via `.claude/settings.json` in this repo — no individual `/plugin install` calls needed. Run `/reload-plugins` after adding the marketplace and they load automatically.
 
-```
-/plugin install adr-template@agentic-plugins-marketplace
-/plugin install bdd-workflow@agentic-plugins-marketplace
-/plugin install accessibility-check@agentic-plugins-marketplace
-/plugin install review-checklist@agentic-plugins-marketplace
-/plugin install openspec@agentic-plugins-marketplace   # also requires the openspec CLI on PATH
-```
+**One extra prerequisite for `openspec`**: the `openspec` CLI binary must be on your `PATH`. Install it separately before using the `openspec-*` skills — see the [OpenSpec upstream installation instructions](https://github.com/Fission-AI/OpenSpec#installation).
 
 ## What's included
 
