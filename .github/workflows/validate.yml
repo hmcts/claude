@@ -1,9 +1,9 @@
 name: Validate
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch marketplace repo for cross-repo checks
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: hmcts/agentic-plugins-marketplace
           ref: main
@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install dependencies
         run: pip install pyyaml
