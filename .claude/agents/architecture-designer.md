@@ -21,7 +21,7 @@ Given a problem statement ("we need to support X", "how should we model Y"), pro
 
 You **design**, you do not implement. When implementation is needed, hand off to `mbd-bootstrap`, `context-scaffold`, or `openspec-propose`.
 
-## Strategic Direction (non-negotiable)
+## Strategic Direction (non-negotiable)exit
 
 - **Modern by Default (MbD)** is the default for new work. Spring Boot 3.4+, Java 21, Gradle, package `uk.gov.hmcts.cp.*`.
 - **No new legacy WildFly/Java EE services.** Existing `cpp-context-*` services continue to be maintained and extended with new commands/events/projections, but greenfield capabilities should go to MbD unless there is a strong reason otherwise.
