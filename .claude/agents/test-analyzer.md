@@ -57,9 +57,44 @@ cpp-mbd-{name}/src/test/java/
 
 ```
 cpp-ui-{name}/src/
-├── app/**/*.spec.ts               # Component/service unit tests (Jest/Jasmine)
-└── e2e/                           # End-to-end tests (if present)
+└── app/**/*.spec.ts               # Component/service unit tests (Jest/Jasmine)
 ```
+
+### Cross-app UI E2E (`cpp-ui-e2e`)
+
+A single shared repo drives end-to-end tests for **all** `cpp-ui-*` apps. Stack:
+**Protractor 5.4 + Jasmine + Selenium WebDriver (Firefox)** on TypeScript 4.3.
+There is no per-app `e2e/` folder — all UI E2E coverage lives here.
+
+```
+cpp-ui-e2e/src/
+├── specs/
+│   ├── axe/                       # axe-core accessibility specs (WCAG 2.1 AA)
+│   ├── case-management/           # Per-domain suites — match protractor.conf.ts
+│   ├── court-scheduler/
+│   ├── defence/
+│   ├── hearing/                   # *.spec.ts per user journey
+│   ├── home/
+│   ├── listing/
+│   ├── online-plea/
+│   ├── platform/                  # *.scenario.ts — cross-suite platform flows
+│   ├── prosecution-casefile/
+│   ├── results/
+│   ├── sjp/
+│   ├── third-party-subscriptions/
+│   └── work-management/
+├── pages/                         # Page Object Model — one folder per app
+├── elements/                      # Reusable element wrappers (govuk-frontend)
+├── helpers/                       # browser, navigate, locators, services helpers
+├── config/                        # baseUrls, capabilities, jasmine, reporters (HTML, Zephyr)
+├── platform/                      # @cpp/platform — builders, factory, presets, priming, contexts
+└── protractor.conf.ts             # Suite definitions, capabilities, plugins
+```
+
+Run modes: `npm run e2e -- --suite=<name>` (local Firefox) or
+`npm run ci:e2e` (`--headless --idam --silent`, Europe/London TZ). Test data
+is primed via `npx cpp generate <preset>` against `--apiUrl`. Reports go to
+protractor-beautiful-reporter (HTML) and optionally Zephyr.
 
 ## Coverage Gap Analysis
 
@@ -130,7 +165,22 @@ grep -rn "System.currentTimeMillis\|new Date()" {test-dirs}
 grep -rn "static.*=" {test-dirs} | grep -v "final\|static final"
 ```
 
-## Test Quality Review
+## UI E2E Analysis (`cpp-ui-e2e`)
+
+Specific checks for the Protractor/Jasmine suite:
+
+| Check | What to look for |
+|---|---|
+| **Suite registration** | Every new `src/specs/<domain>/` folder must be declared in `protractor.conf.ts` `suites:` map — un-registered specs never run |
+| **Page Object usage** | Selectors should live under `src/pages/` and `src/elements/`, not inline in specs |
+| **Hardcoded waits** | `browser.sleep()` and arbitrary `waitForWebElementTimeout` overrides — replace with `ExpectedConditions` polling |
+| **Missing axe scans** | Any new user journey spec must have a matching `src/specs/axe/<area>.spec.ts` running `@axe-core/webdriverjs` |
+| **Test data priming** | Tests must use `@cpp/platform` builders/presets — never raw API calls or hand-rolled fixtures |
+| **IDAM coverage** | Specs that touch logged-in flows must work under `--idam` (no IDAM-bypass shortcuts) |
+| **Resource freshness** | After context-service schema changes, `npm run build:resources` must be re-run; stale `src/platform/resources/` causes priming failures |
+| **Suite isolation** | Specs in `<domain>` suite must not depend on data primed by another suite |
+
+
 
 ### Assertion Quality
 - [ ] Tests have meaningful assertions (not just `assertNotNull`)
@@ -156,6 +206,14 @@ grep -rn "static.*=" {test-dirs} | grep -v "final\|static final"
 - [ ] Scenarios are independent (no step ordering dependencies)
 - [ ] Step definitions are reusable across features
 - [ ] Background sections set up common preconditions
+
+### UI E2E Quality (Protractor/Jasmine — `cpp-ui-e2e`)
+- [ ] Specs use Page Objects from `src/pages/` rather than inline `element(by.css(...))`
+- [ ] Test data created via `@cpp/platform` presets/builders, cleaned up on teardown
+- [ ] No `browser.sleep()` — use `ExpectedConditions` and `browser.wait()`
+- [ ] Each suite is independently runnable via `--suite=<name>`
+- [ ] Accessibility scans (`@axe-core/webdriverjs`) cover every new page
+- [ ] Specs pass under both local (Firefox) and `--headless --idam` CI mode
 
 ## Output Format
 

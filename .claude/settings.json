@@ -1,4 +1,68 @@
 {
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -q '\\.tf$'; then cd \"$(dirname \"$FILE\")\" && terraform fmt -check \"$FILE\" 2>/dev/null || echo 'HOOK WARNING: Terraform file not formatted. Run: terraform fmt'; terraform validate 2>/dev/null || echo 'HOOK WARNING: Terraform validation failed'; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -q 'viewstore-liquibase.*\\.xml$'; then if grep -q '<changeSet' \"$FILE\" 2>/dev/null; then if ! grep -q '<rollback' \"$FILE\" 2>/dev/null; then echo 'HOOK WARNING: Liquibase changeset missing <rollback> block'; fi; if ! grep -qE 'id=\"[a-z0-9_-]+\"' \"$FILE\" 2>/dev/null; then echo 'HOOK WARNING: Changeset ID should use lowercase with hyphens/underscores'; fi; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if command -v gitleaks >/dev/null 2>&1; then gitleaks detect --no-git --source \"$(dirname \"$FILE\")\" -v 2>&1 | head -5 || true; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -qE 'cpp-context-[^/]+/.+\\.java$'; then MODULE_DIR=\"$FILE\"; while [ \"$MODULE_DIR\" != '/' ] && [ ! -f \"$MODULE_DIR/pom.xml\" ]; do MODULE_DIR=\"$(dirname \"$MODULE_DIR\")\"; done; if [ -f \"$MODULE_DIR/pom.xml\" ]; then echo \"HOOK INFO: Java file changed in $(basename \"$MODULE_DIR\"). Consider running: mvn test -pl $(basename \"$MODULE_DIR\")\"; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -qE 'cpp-ui-[^/]+/.*\\.(ts|html|scss)$'; then REPO_DIR=\"$FILE\"; while [ \"$REPO_DIR\" != '/' ] && [ ! -f \"$REPO_DIR/package.json\" ]; do REPO_DIR=\"$(dirname \"$REPO_DIR\")\"; done; if [ -f \"$REPO_DIR/package.json\" ]; then echo \"HOOK INFO: UI file changed. Consider running: cd $REPO_DIR && npm run lint\"; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -qE '(values.*\\.yaml|Chart\\.yaml)$' && echo \"$FILE\" | grep -q 'helm'; then CHART_DIR=\"$(dirname \"$FILE\")\"; while [ \"$CHART_DIR\" != '/' ] && [ ! -f \"$CHART_DIR/Chart.yaml\" ]; do CHART_DIR=\"$(dirname \"$CHART_DIR\")\"; done; if [ -f \"$CHART_DIR/Chart.yaml\" ]; then helm lint \"$CHART_DIR\" 2>&1 | tail -5 || echo 'HOOK WARNING: Helm lint failed'; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -q '\\.tf$'; then DIR=\"$(dirname \"$FILE\")\"; if [ -d \"$DIR/.git\" ] || git -C \"$DIR\" rev-parse --git-dir >/dev/null 2>&1; then if ! ls \"$DIR/.pre-commit-config.yaml\" >/dev/null 2>&1; then echo 'HOOK WARNING: No .pre-commit-config.yaml found in Terraform repo. Install pre-commit hooks: pre-commit install'; fi; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -qE '(domain|event)/.*\\.java$' && echo \"$FILE\" | grep -q 'cpp-context-'; then REPO_DIR=\"$FILE\"; while [ \"$REPO_DIR\" != '/' ] && [ ! -d \"$REPO_DIR/.git\" ]; do REPO_DIR=\"$(dirname \"$REPO_DIR\")\"; done; SCHEMA_DIR=\"$REPO_DIR\"; if [ -d \"$SCHEMA_DIR/src/main/resources/json/schema\" ]; then echo \"HOOK INFO: Domain/event file changed. Verify compatibility with schemas in $SCHEMA_DIR/src/main/resources/json/schema/\"; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "CHANGED=$(git diff --cached --name-only); if echo \"$CHANGED\" | grep -q '\\.tf$'; then echo 'Running terraform fmt check on staged .tf files...'; for f in $(echo \"$CHANGED\" | grep '\\.tf$'); do terraform fmt -check \"$f\" 2>/dev/null || { echo \"HOOK ERROR: $f is not formatted. Run: terraform fmt $f\"; exit 1; }; done; fi"
+          },
+          {
+            "type": "command",
+            "command": "CHANGED=$(git diff --cached --name-only); if echo \"$CHANGED\" | grep -qE '\\.(ts|html|scss)$' && [ -f 'package.json' ]; then echo 'Running Angular lint on staged files...'; npm run lint --silent 2>&1 | tail -10 || echo 'HOOK WARNING: Lint issues detected'; fi"
+          },
+          {
+            "type": "command",
+            "command": "if command -v gitleaks >/dev/null 2>&1; then gitleaks protect --staged -v 2>&1 | head -10; else echo 'HOOK INFO: gitleaks not installed. Consider: brew install gitleaks'; fi"
+          },
+          {
+            "type": "command",
+            "command": "CHANGED=$(git diff --cached --name-only); if echo \"$CHANGED\" | grep -q 'viewstore-liquibase.*\\.xml$'; then for f in $(echo \"$CHANGED\" | grep 'viewstore-liquibase.*\\.xml$'); do if grep -q '<changeSet' \"$f\" && ! grep -q '<rollback' \"$f\"; then echo \"HOOK WARNING: $f has changesets without rollback blocks\"; fi; done; fi"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "adr-template@agentic-plugins-marketplace": true,
     "bdd-workflow@agentic-plugins-marketplace": true,

@@ -20,15 +20,16 @@ Load on demand when relevant:
 
 Run stages in order. Do not skip or reorder. Halt at every human gate before proceeding.
 
-| # | Stage          | Agent file                        | Gate   |
-|---|----------------|-----------------------------------|--------|
-| 1 | Requirements   | agents/requirements-analyst.md    | Human  |
-| 2 | User Story     | agents/story-writer.md            | Human  |
-| 3 | Test Specs     | agents/test-engineer.md           | Human  |
-| 4 | Code           | agents/implementation.md          | Auto   |
-| 5 | Code Review    | agents/code-reviewer.md           | Human  |
-| 6 | Build & Test   | agents/ci-orchestrator.md         | Auto   |
-| 7 | Deploy Sandbox | agents/deployer.md                | Human  |
+| # | Stage          | Agent file                         | Gate   |
+|---|----------------|------------------------------------|--------|
+| 1 | Requirements   | agents/requirements-analyst.md     | Human  |
+| 2 | Architecture & Design | agents/architecture-designer.md | Human|
+| 3 | User Story     | agents/story-writer.md             | Human  |
+| 4 | Test Specs     | agents/test-engineer.md            | Human  |
+| 5 | Code           | agents/implementation.md           | Auto   |
+| 6 | Code Review    | agents/code-reviewer.md            | Human  |
+| 7 | Build & Test   | agents/ci-orchestrator.md          | Auto   |
+| 8 | Deploy Sandbox | agents/deployer.md                 | Human  |
 
 ---
 
