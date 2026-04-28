@@ -62,6 +62,7 @@
         ]
       }
     ]
+  },
   "enabledPlugins": {
     "adr-template@agentic-plugins-marketplace": true,
     "bdd-workflow@agentic-plugins-marketplace": true,

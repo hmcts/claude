@@ -22,8 +22,8 @@ Run stages in order. Do not skip or reorder. Halt at every human gate before pro
 
 | # | Stage          | Agent file                         | Gate   |
 |---|----------------|------------------------------------|--------|
-| 1 | Requirements   | agents/requirements-aexitnalyst.md | Human  |
-| 2 | Architecture & Design | agents/architecture-design.md | Human|
+| 1 | Requirements   | agents/requirements-analyst.md     | Human  |
+| 2 | Architecture & Design | agents/architecture-designer.md | Human|
 | 3 | User Story     | agents/story-writer.md             | Human  |
 | 4 | Test Specs     | agents/test-engineer.md            | Human  |
 | 5 | Code           | agents/implementation.md           | Auto   |
