@@ -1,0 +1,35 @@
+{
+  "_comment": "Drop these blocks into ~/.claude/settings.json (or merge with project settings). HOOKS_DIR resolves at run time; use an absolute path that points at this directory on your machine.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh" },
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-bash.sh" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh" },
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh" },
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh" }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh" }
+        ]
+      }
+    ]
+  }
+}
