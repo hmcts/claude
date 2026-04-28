@@ -1,50 +1,49 @@
-# Skill: Accessibility Check
+# Skill: Accessibility Check (HMCTS overlay)
 
-## Purpose
-Ensure any user-facing output meets WCAG 2.1 AA as required by HMCTS / GDS standards.
-Used by: test-engineer, code-reviewer, deployer.
+The generic version of this skill has moved to the [agentic-plugins-marketplace](https://github.com/hmcts/agentic-plugins-marketplace).
 
-## When to apply
-- Any story that produces HTML output (pages, components, error messages, forms)
-- Any story modifying navigation, focus management, or dynamic content
+Install the generic plugin first:
 
-## Automated checks (axe-core)
-Add the following assertion to the integration test for every new page or component:
-
-```java
-// Spring Boot / Selenium example
-AxeBuilder axeBuilder = new AxeBuilder();
-Results results = axeBuilder.analyze(driver);
-assertThat(results.getViolations()).isEmpty();
+```
+/plugin install accessibility-check@agentic-plugins-marketplace
 ```
 
-```javascript
-// Node / Playwright example
-const { checkA11y } = require('axe-playwright');
-await checkA11y(page, null, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] } });
-```
+The generic plugin covers: WCAG 2.1 AA automated checks (axe-core Java / Playwright Node / Playwright Python), the manual-check table, and failure severity classification.
 
-## Manual checks (required for these scenarios)
-The following cannot be fully automated and must be checked by a human:
+This overlay adds the HMCTS-specific requirements.
 
-| Check                            | Guidance                                                  |
-|----------------------------------|-----------------------------------------------------------|
-| Keyboard navigation              | Tab through all interactive elements — logical order?     |
-| Focus visible                    | Is the focus ring visible on all interactive elements?    |
-| Screen reader (VoiceOver/NVDA)   | Are form labels, error messages, and headings announced?  |
-| Colour contrast                  | 4.5:1 for normal text, 3:1 for large text (use Stark)     |
-| Error identification              | Errors linked to fields via `aria-describedby`            |
-| Timeout warnings                 | User warned before session timeout with option to extend  |
+---
 
-## GOV.UK / HMCTS component library
-Prefer GOV.UK Frontend components — they are pre-tested for WCAG 2.1 AA.
-Do not build custom implementations of: buttons, inputs, error summaries, breadcrumbs,
-accordions, tabs, or date inputs when GOV.UK Frontend versions exist.
+## HMCTS-specific additions
 
-## Failure classification
+### Policy basis
+WCAG 2.1 AA compliance is required by **HMCTS and GDS standards**. It is non-negotiable for any public-facing service.
+
+### GOV.UK / HMCTS component library
+Prefer **GOV.UK Frontend** components — they are pre-tested for WCAG 2.1 AA.
+
+Do not build custom implementations of any of the following when a GOV.UK Frontend version exists:
+- Buttons
+- Inputs
+- Error summaries
+- Breadcrumbs
+- Accordions
+- Tabs
+- Date inputs
+
+Any deviation requires an ADR recording the accessibility testing done on the custom component.
+
+### Failure handling workflow
+HMCTS overrides the generic "Log as an issue" action with the Jira workflow:
+
 | Severity | Action                                                  |
 |----------|---------------------------------------------------------|
 | Critical | Block deployment — must fix before merge                |
 | Serious  | Block deployment — must fix before merge                |
 | Moderate | Create Jira ticket — fix within current sprint          |
 | Minor    | Create Jira ticket — fix in next sprint                 |
+
+### Used by
+- `test-engineer` agent (axe-core hooks in the test scaffolding)
+- `code-reviewer` agent (manual checks on UI PRs)
+- `deployer` agent (evidence requirement at the deploy gate)

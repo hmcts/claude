@@ -1,11 +1,11 @@
 ---
 name: dependency-audit
-description: Audit dependency versions across CPP repositories. Use when checking for version mismatches, outdated libraries, or parent POM alignment across context services.
+description: Audit dependency versions across CP repositories. Use when checking for version mismatches, outdated libraries, or parent POM alignment across context services.
 ---
 
 # Dependency Audit
 
-Scans CPP repositories for dependency version inconsistencies, outdated libraries, and parent POM alignment issues.
+Scans CP repositories for dependency version inconsistencies, outdated libraries, and parent POM alignment issues.
 
 ## When to Use
 

@@ -4,7 +4,15 @@
 This is an HMCTS engineering project. All work must comply with HMCTS engineering standards,
 GDS Service Manual principles, and MOJ security and accessibility requirements.
 
-Always load context/tech-stack.md and context/hmcts-standards.md before any pipeline stage.
+Always load the following before any pipeline stage:
+- `context/tech-stack.md`
+- `context/hmcts-standards.md`
+- `context/azure-cloud-native.md` — Cloud-Native posture and Shared Responsibility Model on Azure.
+- `context/logging-standards.md` — mandatory JSON logging for Spring Boot services.
+
+Load on demand when relevant:
+- `context/azure-sdk-guide.md` — when working on any Azure service integration.
+- `context/cloud-adoption-rationale.md` — only when lock-in or cloud-cost objections surface, or when an ADR weighs those trade-offs. Do not auto-load.
 
 ---
 
@@ -27,13 +35,17 @@ Run stages in order. Do not skip or reorder. Halt at every human gate before pro
 
 ## Shared skills (available to all agents)
 
-| Skill file                              | Use when                                      |
-|-----------------------------------------|-----------------------------------------------|
-| skills/write-acceptance-criteria.md     | Deriving testable ACs from any requirement    |
-| skills/generate-bdd-specs.md            | Writing Cucumber/Gherkin feature files        |
-| skills/accessibility-check.md          | WCAG 2.1 AA review of any UI component        |
-| skills/review-checklist.md             | Code review pass/fail checklist               |
-| skills/adr-template.md                 | Recording any architecture decision           |
+Skills split across the marketplace and this repo. Install the marketplace plugins once (see the repo README "Prerequisite" section) — the file paths below resolve to pointer stubs or HMCTS overlays that reference the installed plugins.
+
+| Skill file                              | Source                            | Use when                                      |
+|-----------------------------------------|-----------------------------------|-----------------------------------------------|
+| skills/write-acceptance-criteria.md     | marketplace: `bdd-workflow`       | Deriving testable ACs from any requirement    |
+| skills/generate-bdd-specs.md            | marketplace: `bdd-workflow`       | Writing Cucumber/Gherkin feature files        |
+| skills/accessibility-check.md           | marketplace: `accessibility-check` + HMCTS overlay | WCAG 2.1 AA review + GOV.UK Frontend guidance |
+| skills/review-checklist.md              | marketplace: `review-checklist` + HMCTS overlay    | Code review checklist + Spring Boot / Azure / logging |
+| skills/adr-template.md                  | marketplace: `adr-template`       | Recording any architecture decision           |
+| skills/springboot-service-from-template/| local (HMCTS-specific)            | Standing up a new Spring Boot service from the HMCTS template |
+| skills/springboot-api-from-template/    | local (HMCTS-specific)            | Standing up a new HMCTS Marketplace API spec repo |
 
 ---
 
@@ -64,3 +76,6 @@ docs/pipeline/
 - Accessibility (WCAG 2.1 AA) is non-negotiable for any user-facing output.
 - Do not store PII, case data, or court reference numbers in artefacts or prompts.
 - If confidence in a decision is low, write an ADR and surface it for review.
+- For Spring Boot services: the HMCTS templates (`service-hmcts-crime-springboot-template`, `api-hmcts-crime-template`) are the master source. Use `skills/springboot-service-from-template/` or `skills/springboot-api-from-template/` to adopt them — do not scaffold build files, Dockerfile, or logback config from scratch. Deviations require an ADR.
+- JSON logging to stdout is mandatory for Spring Boot services. See `context/logging-standards.md`.
+- Azure integrations use the Azure SDK via Managed Identity. Connection strings, SAS tokens, and account keys are not permitted in code, config, env vars, or Helm values. See `context/azure-sdk-guide.md`.
