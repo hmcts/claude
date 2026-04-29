@@ -1,4 +1,4 @@
-# cpp-claude
+# claude
 
 Shared Claude Code configuration for the **Crime Common Platform (CPP)** — the HMCTS/CPS digital case management platform used across criminal courts in England and Wales.
 
