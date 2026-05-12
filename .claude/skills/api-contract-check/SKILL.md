@@ -120,3 +120,13 @@ application/vnd.listing.query.get-court-schedule+json
 ```
 
 The framework routes commands/queries to the correct handler based on the `Content-Type` header. Mismatched content types will cause silent routing failures.
+
+## Use Alongside `cpp-apitests`
+
+When extending tests in `cpp-apitests`, the response assertions in a `*IT.java` are contract checks in disguise. Before adding or changing an assertion:
+
+1. Locate the producing service's contract (RAML for legacy contexts, OpenAPI for Modern by Default services)
+2. Confirm the asserted field, type, enum value, and required/optional status match the contract
+3. If the test diverges from the contract, the test — not the contract — is wrong; fix the test or open a contract-change ADR
+
+For authoring guidance in `cpp-apitests`, see `cpp-test-authoring`.

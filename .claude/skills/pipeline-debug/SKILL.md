@@ -60,6 +60,10 @@ Variables are resolved in this order (later overrides earlier):
 | Terraform modules | `terratest.yaml` | — | terraform init, validate, plan, test |
 | Docker images | `image-publish.yaml` | — | Docker build, ACR push |
 | Helm charts | Custom in `cpp-helm-chart` | — | Helm lint, package, ACR push |
+| UI E2E tests (`cpp-ui-e2e-serenity`) | `azure-pipelines.yml` (PR) | `azure-pipelines-dev01_regression.yml`, `*_BPO_regression.yml`, `*_migration.yml`, `*_migration_EDT.yml`, `*_migration-nows.yml`, `*_migration-ts.yml`, `azure-pipeline-cdci-dlrm.yml` | Maven `verify`, Serenity profiles, WebDriver browser provisioning, Serenity HTML reports |
+| API integration tests (`cpp-apitests`) | `azure-pipelines.yaml` (PR) | `apitests-pipeline.yaml` | Maven `verify` (Failsafe runs `*IT.java`), REST Assured + JUnit 5 |
+
+For test-authoring guidance in either of the two test repos above, see `cpp-test-authoring`.
 
 ### Step 5: Common Failure Patterns
 
@@ -72,6 +76,9 @@ Variables are resolved in this order (later overrides earlier):
 | `docker push failed` | ACR login failed or wrong registry | Check `containerRegistry` service connection |
 | `terraform plan failed` | Backend config mismatch or missing vars | Check `backend-config` parameters |
 | `Helm lint failed` | Chart.yaml version mismatch or missing deps | Check `helm dependency update` step |
+| Serenity report empty / no scenarios ran | Wrong tag filter or `glue` package missing | Check `TestRunner.java` `@CucumberOptions` + the profile's `-Dcucumber.filter.tags` |
+| `cpp-apitests` build green but no tests executed | Class named `*Test.java` instead of `*IT.java` | Failsafe only picks up `*IT.java`; rename |
+| WebDriver session creation failed | Browser/driver mismatch in agent pool | Check WebDriverManager config + agent pool image |
 
 ### Step 6: Generate Debugging Report
 
