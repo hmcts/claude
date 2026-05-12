@@ -63,5 +63,10 @@
       }
     ]
   },
-  "enabledPlugins": {}
+  "enabledPlugins": {
+    "adr-template@agentic-plugins-marketplace": true,
+    "bdd-workflow@agentic-plugins-marketplace": true,
+    "accessibility-check@agentic-plugins-marketplace": true,
+    "review-checklist@agentic-plugins-marketplace": true
+  }
 }
