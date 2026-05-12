@@ -38,6 +38,8 @@ Determine the repo type from the directory name and build files:
 - `cpp-terraform-*` with `*.tf` → Terraform module
 - `cpp-helm-chart` → Helm chart changes
 - `cp-c4-architecture` with `.c4` files → Architecture model changes
+- `cpp-ui-e2e-serenity` with `serenity.properties` → UI E2E test repo (Serenity BDD + Cucumber)
+- `cpp-apitests` with `api-integration-test/` → API integration test repo (JUnit 5 + REST Assured)
 
 ### Step 3: Apply Repo-Specific Review Criteria
 
@@ -77,6 +79,27 @@ Determine the repo type from the directory name and build files:
 - [ ] Sensitive values marked as `sensitive = true`
 - [ ] Tags applied consistently
 - [ ] Pre-commit hooks pass (format, validate, docs)
+
+#### UI E2E Tests (`cpp-ui-e2e-serenity`)
+- [ ] Feature file in correct `src/test/resources/features/<domain>/` folder
+- [ ] Step definitions extend the relevant page object (no duplicated locators)
+- [ ] New locators added to `src/test/resources/locators/custom-locators.json` (not hard-coded in Java)
+- [ ] No `Thread.sleep` — explicit waits only
+- [ ] Scenarios tagged for the intended pipeline profile (regression / BPO / migration / DLRM)
+- [ ] No PII, court refs, or real personal data in `testdata/` or scenario examples
+- [ ] `TestRunner` glue covers any new step-def package
+- [ ] Steps annotated with `@Step`; cross-step state held in the Serenity session (no static fields)
+
+#### API Integration Tests (`cpp-apitests`)
+- [ ] Test class name ends `IT.java` (Failsafe convention — `*Test.java` is silently skipped)
+- [ ] Extends the closest abstract base (`AbstractTest` / `ApplicationsAbstractTest` / `AuditAbstractTest` / `AuthorizationAbstractTest`)
+- [ ] Reuses existing helpers (`JsonUtil`, `DbUtil`, `ApplicationUtil`, `RestAssuredFileUploadUtil`, domain helpers) and builders rather than adding new ones
+- [ ] REST Assured `given().when().then()` with Hamcrest / AssertJ — no raw `assertEquals` on JSON paths
+- [ ] JSON fixtures under `src/test/resources/<domain>/`; no inline payload strings
+- [ ] No hard-coded bearer tokens, URLs, PII, or court refs
+- [ ] Assertions align with the producing service's RAML / OpenAPI contract — see `api-contract-check`
+
+For authoring guidance in either test repo, see `cpp-test-authoring`.
 
 #### Architecture Model (.c4)
 - [ ] Relationship titles read as natural language sentences (lowercase first letter)

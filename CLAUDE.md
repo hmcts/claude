@@ -46,6 +46,7 @@ Skills split across the marketplace and this repo. Install the marketplace plugi
 | skills/adr-template.md                  | marketplace: `adr-template`       | Recording any architecture decision           |
 | skills/springboot-service-from-template/| local (HMCTS-specific)            | Standing up a new Spring Boot service from the HMCTS template |
 | skills/springboot-api-from-template/    | local (HMCTS-specific)            | Standing up a new HMCTS Marketplace API spec repo |
+| skills/cpp-test-authoring/              | local (HMCTS-specific)            | Writing or extending tests in `cpp-ui-e2e-serenity` (Serenity BDD/Cucumber) or `cpp-apitests` (JUnit 5 + REST Assured) |
 
 ---
 

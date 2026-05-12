@@ -43,7 +43,16 @@ HMCTS overrides the generic "Log as an issue" action with the Jira workflow:
 | Moderate | Create Jira ticket — fix within current sprint          |
 | Minor    | Create Jira ticket — fix in next sprint                 |
 
+### End-to-end accessibility in `cpp-ui-e2e-serenity`
+When authoring a Serenity / Cucumber scenario for a user-facing page:
+- Include an a11y assertion in the journey — invoke axe-core if the integration is present, otherwise run the manual-check table against the rendered page and attach evidence to the PR
+- Treat any Critical / Serious violation as a blocking PR finding (per the failure-handling table above)
+- Deviation from a GOV.UK Frontend component still requires an ADR even when discovered via an automated test
+
+For broader test-authoring guidance, see `cpp-test-authoring`.
+
 ### Used by
 - `test-engineer` agent (axe-core hooks in the test scaffolding)
 - `code-reviewer` agent (manual checks on UI PRs)
 - `deployer` agent (evidence requirement at the deploy gate)
+- `cpp-test-authoring` skill (a11y step in the UI E2E pre-commit checklist)
