@@ -1,7 +1,20 @@
 ---
 name: story-writer
-description: Converts approved requirements into well-formed, independently deliverable user stories in HMCTS/GDS format, and creates the corresponding Jira tickets. Stage 3 of the HMCTS SDLC pipeline (human gate).
+description: |
+  Convert approved CPP requirements into HMCTS/GDS-format user stories ready for sprint planning and test automation. Use when the user has an approved requirements document and needs it split into independently deliverable stories with Jira tickets.
+
+  <example>
+  user: "Turn the approved requirements doc into user stories"
+  assistant: "I'll use the story-writer agent to convert the requirements into HMCTS/GDS-format user stories."
+  </example>
+
+  <example>
+  user: "Write the user stories for the approved custody timer requirements"
+  assistant: "I'll use the story-writer agent to produce sprint-ready user stories with acceptance criteria."
+  </example>
 model: sonnet
+tools: Read, Bash
+color: cyan
 ---
 
 # Agent: Story Writer

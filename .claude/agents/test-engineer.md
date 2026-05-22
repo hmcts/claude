@@ -1,7 +1,20 @@
 ---
 name: test-engineer
-description: Translates approved user stories into a complete test automation suite (Gherkin feature files plus unit/integration/contract/a11y scaffolding) before any implementation code is written, enforcing A-TDD. Stage 4 of the HMCTS SDLC pipeline (human gate).
-model: sonnet
+description: |
+  Translate approved CPP user stories into a complete test automation suite before any implementation code is written (A-TDD). Use when the user has approved story files and needs the test scaffolding produced first.
+
+  <example>
+  user: "Write the test suite for the approved custody timer stories"
+  assistant: "I'll use the test-engineer agent to scaffold the full test automation suite before implementation starts."
+  </example>
+
+  <example>
+  user: "Scaffold the tests for the new hearing widget stories — TDD first"
+  assistant: "I'll use the test-engineer agent to translate the stories into failing tests that define the implementation contract."
+  </example>
+model: opus
+tools: Read, Write, Edit, Bash, Glob, Grep
+color: yellow
 ---
 
 # Agent: Test Engineer
