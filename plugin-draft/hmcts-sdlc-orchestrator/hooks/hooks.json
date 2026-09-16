@@ -1,5 +1,5 @@
 {
-  "description": "CPP security guardrails plus harness telemetry: block dangerous bash commands, guard sensitive file paths, prevent PII and secrets from appearing in prompts or written files, and record anonymous usage events for the measurement framework.",
+  "description": "CPP security guardrails, SDLC human-gate enforcement, and harness telemetry: block dangerous bash commands, guard sensitive file paths, prevent PII and secrets from appearing in prompts or written files, block pipeline stages whose human gate has not been approved, and record anonymous usage events for the measurement framework.",
   "hooks": {
     "SessionStart": [
       {
@@ -34,7 +34,8 @@
       {
         "hooks": [
           { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-pii.sh" },
-          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-secrets.sh" }
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-secrets.sh" },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/enforce-gate.sh" }
         ]
       }
     ],
@@ -43,6 +44,12 @@
         "matcher": "Bash",
         "hooks": [
           { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/guard-bash.sh" }
+        ]
+      },
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/enforce-gate.sh" }
         ]
       },
       {
@@ -55,7 +62,8 @@
         "matcher": "Write|Edit",
         "hooks": [
           { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-pii.sh" },
-          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-secrets.sh" }
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-secrets.sh" },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/enforce-gate.sh" }
         ]
       }
     ]
