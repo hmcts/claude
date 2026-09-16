@@ -1,11 +1,62 @@
 {
-  "_comment": "Drop these blocks into ~/.claude/settings.json (or merge with project settings). HOOKS_DIR resolves at run time; use an absolute path that points at this directory on your machine.",
+  "_comment": "Drop these blocks into ~/.claude/settings.json (or merge with project settings). Paths must be absolute and point at this directory on your machine. If you install the hmcts-sdlc-orchestrator plugin instead, all of this is wired for you by hooks/hooks.json \u2014 do not do both.",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/harness-telemetry.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/harness-telemetry.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/harness-telemetry.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Skill|Task|Agent|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/harness-telemetry.sh"
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh" },
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
+          }
         ]
       }
     ],
@@ -13,21 +64,49 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-bash.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-bash.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
+          }
         ]
       },
       {
         "matcher": "Write|Edit",
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh" },
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh" },
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
+          }
         ]
       },
       {
         "matcher": "Read",
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh"
+          }
         ]
       }
     ]
