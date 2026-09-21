@@ -13,6 +13,43 @@ Hooks block tool calls and prompts when input matches a known-bad pattern. They 
 | `guard-bash.sh` | `PreToolUse:Bash` | `--no-verify`, `--no-gpg-sign`, `--dangerously-skip-permissions`, force-push to `main`/`master`/`develop`/`release/*`, `kubectl --context …prod…`, `az aks …prod…`, prod DB connections, `rm -rf` on workspace roots. |
 | `guard-paths.sh` | `PreToolUse:Read\|Write\|Edit` | `.env*` (allows `.env.example`/`.sample`/`.template`/`.dist`), `kubeconfig*`, SSH private keys, `credentials*.json`, `*.pem`/`*.key`/`*.pfx`/`*.p12`, paths under `secrets/`. Edits/writes to prod Helm values and prod Flux configs. |
 
+## SDLC human-gate enforcement
+
+| Script | Hook events | What it does |
+|---|---|---|
+| `enforce-gate.sh` | `PreToolUse:Task\|Agent`, `PreToolUse:Write\|Edit`, `UserPromptSubmit` | Blocks entry to a pipeline stage whose preceding **human gates** are not approved, and injects current gate state into context each turn. |
+| `record-gate.sh` | invoked by `/gate`, not a hook | Writes the gate state that `enforce-gate.sh` reads. |
+
+The gates used to exist only as prose ("Halt at every human gate") in `CLAUDE.md` and in each
+agent file. Prose loses — it competes with a live user request and with whatever other SDD
+framework (superpowers, BMAD, Spec-Kit) is loaded in the same session. A `PreToolUse` hook
+exiting 2 is not an instruction: the tool call does not happen.
+
+Two surfaces are gated, because gating only the agent leaves the obvious hole open:
+
+- the `Task` call for the next stage's sub-agent, and
+- any `Write`/`Edit` under `docs/pipeline/` — the model skipping the sub-agent and writing
+  `user-stories/*.md` itself is the bypass that actually gets used.
+
+Gate state lives in `~/.cpp-harness/gates/<hash>.json`, keyed by **repo + branch**, and is
+written only by `record-gate.sh` via the user-invoked `/gate` command:
+
+| `/gate` decision | Gate state | Effect |
+|---|---|---|
+| `approve` / `accept` / `edit` | `approved` | next stage unblocks |
+| `skip` | `skipped` | treated as satisfied — for stages that genuinely do not apply |
+| `reject` | `rejected` | stage stays locked and **all downstream stages reset to pending** |
+
+`record-gate.sh --status` prints the current state.
+
+### Override
+
+`enforce-gate.sh` deliberately does **not** honour `CPP_HOOKS_DISABLE=1` — a gate the
+assistant can be talked into disabling is not a gate. The only escape hatch is
+`CPP_GATES_OVERRIDE=1`, and every use is appended to `~/.cpp-harness/gates/overrides.jsonl`,
+so bypasses are auditable rather than silent.
+
+
 ## Mapping to Don'ts
 
 | Don't (from guidelines) | Enforced by |
@@ -24,6 +61,8 @@ Hooks block tool calls and prompts when input matches a known-bad pattern. They 
 | Force-push to `main`/`master` | `guard-bash.sh` |
 | Auto-approve all tool calls | `guard-bash.sh` (catches the flag inside Bash invocations) |
 | Edit prod Helm values without a human-driven flow | `guard-paths.sh` |
+
+| Advance an SDLC stage without human sign-off | `enforce-gate.sh` |
 
 The remaining Don'ts (review every line, architect sign-off on event flows, WCAG verification, legal review) are **not enforceable via hooks** — they belong in CODEOWNERS, branch protections, and `/ultrareview`.
 
@@ -56,6 +95,18 @@ echo '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command"
 echo '{"hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/repo/.env"}}' \
   | ./guard-paths.sh; echo "exit=$?"
 
+# Should exit 2 (story-writer entered with the requirements gate pending)
+echo '{"hook_event_name":"PreToolUse","tool_name":"Task","tool_input":{"subagent_type":"story-writer"}}' \
+  | ./enforce-gate.sh; echo "exit=$?"
+
+# Should exit 2 (writing the story artefact by hand is gated the same way)
+echo '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"'"$PWD"'/docs/pipeline/user-stories/US-001.md"}}' \
+  | ./enforce-gate.sh; echo "exit=$?"
+
+# Should exit 0 (stage 1 has no preceding gate)
+echo '{"hook_event_name":"PreToolUse","tool_name":"Task","tool_input":{"subagent_type":"requirements-analyst"}}' \
+  | ./enforce-gate.sh; echo "exit=$?"
+
 # Should exit 0 (.env.example is allow-listed)
 echo '{"hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/repo/.env.example"}}' \
   | ./guard-paths.sh; echo "exit=$?"
@@ -68,6 +119,8 @@ Set `CPP_HOOKS_DISABLE=1` in the environment to bypass for one session. Use spar
 ## Limits
 
 - **Pattern matching is heuristic.** A determined paste of base64'd secrets won't be caught. Hooks raise the floor; they don't replace judgment.
+- **Gate enforcement fails open if `jq` is missing.** Blocking every tool call on a tooling
+  gap would be worse than the gap, so `enforce-gate.sh` warns loudly and exits 0. Install `jq`.
 - **Hooks run on the user's machine.** They aren't a server-side control — anyone editing `settings.json` can disable them.
 - **No replacement for branch protection.** Server-side rules in Azure DevOps / GitHub remain the authoritative gate.
 
