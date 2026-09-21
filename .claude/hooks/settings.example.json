@@ -4,8 +4,18 @@
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh" },
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
+          }
         ]
       }
     ],
@@ -13,21 +23,49 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-bash.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-bash.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
+          }
         ]
       },
       {
         "matcher": "Write|Edit",
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh" },
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh" },
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-secrets.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/block-pii.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
+          }
         ]
       },
       {
         "matcher": "Read",
         "hooks": [
-          { "type": "command", "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh"
+          }
         ]
       }
     ]
