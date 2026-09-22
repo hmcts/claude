@@ -19,9 +19,12 @@ This repo is the canonical home for Claude Code agents, skills, commands, and co
 ├── .claude/
 │   ├── agents/                 # Specialist agents (one per pipeline stage + platform tooling)
 │   ├── skills/                 # Reusable capabilities invoked via /<skill-name>
-│   ├── commands/               # Slash commands (e.g. opsx)
+│   ├── commands/               # Slash commands (/gate, opsx)
 │   ├── context/                # Shared context: tech stack, HMCTS standards, coding standards
+│   ├── hooks/                  # Guard hooks (PII, secrets, bash, paths) + harness telemetry
 │   └── settings.local.json     # Local Claude Code settings
+├── docs/
+│   └── telemetry/              # Commit attribution spec, telemetry install guide, design doc
 └── openspec/                   # Spec-driven change workflow
     ├── changes/                # In-flight proposals
     ├── specs/                  # Accepted specs
@@ -191,14 +194,42 @@ Skills fall into two groups: those that live in the marketplace (install via `/p
 
 ### Slash commands
 
-Custom commands in `.claude/commands/opsx/`:
+Custom commands in `.claude/commands/`:
 
 | Command | Purpose |
 |---------|---------|
+| `/gate` | Record a human-gate decision (`accept`/`edit`/`reject`) for a pipeline stage — see [Measuring the harness](#measuring-the-harness) |
 | `/opsx:explore` | Thinking partner mode — investigate problems and clarify requirements without writing code |
 | `/opsx:propose` | Propose a new change with design, specs, and tasks |
 | `/opsx:apply` | Implement tasks from a proposed change |
 | `/opsx:archive` | Archive a completed change |
+
+### Measuring the harness
+
+Whether the harness is improving productivity, developer experience, and platform quality
+is an empirical question. The metrics that answer it — and the two anti-metrics to refuse —
+are set out in [`docs/harness-measurement-framework.html`](./docs/harness-measurement-framework.html).
+The instrumentation behind them, with its open decisions, is in
+[`docs/telemetry/design-doc.html`](./docs/telemetry/design-doc.html) — **circulate this one for
+feedback before rollout.**
+
+Two pieces of instrumentation ship with the harness:
+
+| Piece | What it gives you |
+|---|---|
+| `harness-telemetry.sh` (hook) | Per-skill and per-agent invocation counts, session lifecycle, repo coverage — the adoption picture. Local JSONL, no network calls |
+| `git/post-commit`, `post-rewrite`, `pre-push` + the [local attribution index](./docs/telemetry/attribution-index.md) | The assisted/unassisted split that lets cycle time, change-failure rate, and rework be compared. Held locally, keyed by commit SHA — **nothing is written into commit messages**, because most CPP repos are public |
+| `/gate` → `record-gate.sh` | Gate rejection rate by stage — the only direct quality signal for each pipeline agent |
+| [`scripts/harness_metrics.py`](./scripts/harness_metrics.py) | Reads both of the above and reports the metrics; `--format markdown` for the monthly review, `--format json` for a collector |
+
+Attribution cannot be added retrospectively, so the mechanism should land **before**
+adoption spreads further. Install: [`docs/telemetry/installing.md`](./docs/telemetry/installing.md).
+Opt out with `CPP_HARNESS_TELEMETRY=off`; reporting is aggregate-only by design — see the
+[governance rules](./docs/telemetry/attribution-index.md#governance).
+
+Because attribution lives in the local log rather than in the commit, a report only covers
+machines whose logs you have. That makes the collector a prerequisite rather than a
+follow-up — it is decision D4 in the design doc.
 
 ### Context files
 

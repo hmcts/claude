@@ -8,8 +8,8 @@ Bundled Claude Code plugin that ships the **HMCTS SDLC pipeline** for the Crime 
 |---|---|
 | **Agents** (`agents/`) | requirements-analyst, architecture-designer, story-writer, test-engineer, implementation, code-reviewer, ci-orchestrator, deployer, plus auxiliaries (doc-generator, event-flow-mapper, helm-config-validator, migration-reviewer, rbac-auditor, research, test-analyzer) |
 | **Skills** (`skills/`) | springboot-service-from-template, springboot-api-from-template, cpp-test-authoring, context-service-guide, context-scaffold, api-contract-check, architecture-design, dependency-audit, pipeline-debug, review-pr, terraform-validate, openspec-* |
-| **Hooks** (`hooks/`) | guard-bash, guard-paths, block-pii, block-secrets |
-| **Commands** (`commands/`) | opsx/* |
+| **Hooks** (`hooks/`) | guard-bash, guard-paths, block-pii, block-secrets, harness-telemetry, record-gate, `git/post-commit`, `git/post-rewrite`, `git/pre-push` |
+| **Commands** (`commands/`) | gate, opsx/* |
 | **Context** (`context/`) | tech-stack, hmcts-standards, azure-cloud-native, azure-sdk-guide, cloud-adoption-rationale, coding-standards, logging-standards |
 | **Orchestration** | `CLAUDE.md` — the 8-stage pipeline definition |
 
@@ -43,6 +43,34 @@ For standalone skills:
 > "Review this PR against CPP standards" — triggers `review-pr`
 > "Validate the Helm chart for cpp-hearing" — triggers `helm-config-validator`
 > "Trace the CaseOpened event" — triggers `event-flow-mapper`
+
+## Measuring the harness
+
+The plugin records anonymous usage so the programme can tell whether it is actually
+helping. Installing the plugin enables the local event log; commit attribution needs one
+extra command per machine:
+
+```bash
+git config --global core.hooksPath ~/.claude/plugins/hmcts-sdlc-orchestrator/hooks/git
+```
+
+Commits made during a session are then recorded by SHA in a local index, which is what lets
+cycle time and change-failure rate be split into assisted vs. unassisted work. **Nothing is
+written into the commit message** — most CPP repos are public, and an AI-assistance marker
+there would be permanent and unretractable. The hooks chain to husky, so `cpp-ui-*` repos
+keep commitlint, and none of them can break a commit or a push.
+
+Record human-gate outcomes with `/gate <stage> <accept|edit|reject> [reason]` — gate
+rejection rate is the only direct quality signal for each pipeline agent.
+
+**What is recorded:** session lifecycle, which skills and agents ran, artefact writes under
+`docs/pipeline/`, gate decisions, and the SHAs of commits made during a session — to
+`~/.cpp-harness/` on your machine, nowhere else. Deleting that directory deletes the lot.
+**What is not:** prompt text, file contents, absolute paths, developer identity, or any free
+text. Opt out with `CPP_HARNESS_TELEMETRY=off`.
+
+Full spec: `docs/telemetry/attribution-index.md` and `docs/telemetry/installing.md` in the
+source repo.
 
 ## Source
 

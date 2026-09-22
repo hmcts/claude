@@ -1,0 +1,1014 @@
+<title>Harness Attribution and Telemetry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --ground: #f6f7f9;
+  --surface: #ffffff;
+  --surface-sunk: #eef0f4;
+  --ink: #12161d;
+  --ink-soft: #3d4757;
+  --ink-mute: #6b7583;
+  --rule: #dce0e7;
+  --rule-soft: #e8ebf0;
+  --accent: #25457e;
+  --accent-soft: #e6ecf7;
+  --counter: #8a4a1f;
+  --counter-soft: #f6ece3;
+  --good: #1f6b4a;
+  --good-soft: #e4f0ea;
+  --shadow: 0 1px 2px rgba(18,22,29,.05), 0 8px 24px -16px rgba(18,22,29,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1116; --surface: #161a21; --surface-sunk: #1d222b;
+    --ink: #e7eaef; --ink-soft: #b6bec9; --ink-mute: #858e9c;
+    --rule: #2a313c; --rule-soft: #232932;
+    --accent: #8cabe4; --accent-soft: #1c2739;
+    --counter: #dda06a; --counter-soft: #2b2118;
+    --good: #6cbf95; --good-soft: #17251e;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e1116; --surface: #161a21; --surface-sunk: #1d222b;
+  --ink: #e7eaef; --ink-soft: #b6bec9; --ink-mute: #858e9c;
+  --rule: #2a313c; --rule-soft: #232932;
+  --accent: #8cabe4; --accent-soft: #1c2739;
+  --counter: #dda06a; --counter-soft: #2b2118;
+  --good: #6cbf95; --good-soft: #17251e;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0 1.25rem 6rem;
+}
+.wrap { max-width: 51rem; margin: 0 auto; }
+
+/* masthead */
+.masthead { padding: 4.5rem 0 2rem; border-bottom: 2px solid var(--ink); }
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .69rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 1.1rem;
+}
+h1 {
+  font-family: Newsreader, Georgia, serif; font-weight: 500;
+  font-size: clamp(2.3rem, 6vw, 3.4rem); line-height: 1.06;
+  letter-spacing: -.015em; text-wrap: balance; margin: 0 0 1rem;
+}
+.standfirst {
+  font-family: Newsreader, Georgia, serif; font-size: 1.25rem; line-height: 1.5;
+  color: var(--ink-soft); max-width: 35rem; margin: 0;
+}
+.masthead-meta {
+  display: flex; flex-wrap: wrap; gap: .45rem 1.5rem; margin-top: 1.75rem;
+  font-family: "IBM Plex Mono", monospace; font-size: .72rem;
+  color: var(--ink-mute); letter-spacing: .02em;
+}
+.masthead-meta b { color: var(--ink-soft); font-weight: 500; }
+
+/* sections */
+section { padding-top: 3.4rem; }
+.sec-head {
+  display: flex; align-items: baseline; gap: .9rem;
+  border-bottom: 1px solid var(--rule); padding-bottom: .6rem; margin-bottom: 1.5rem;
+}
+.sec-num {
+  font-family: "IBM Plex Mono", monospace; font-size: .72rem; color: var(--accent);
+  letter-spacing: .08em; flex: none; padding-top: .25rem;
+}
+h2 {
+  font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.7rem;
+  letter-spacing: -.01em; line-height: 1.2; margin: 0; text-wrap: balance;
+}
+h3 {
+  font-weight: 600; font-size: .96rem; margin: 1.9rem 0 .6rem;
+}
+h3 .mono-name {
+  font-family: "IBM Plex Mono", monospace; font-size: .88rem; font-weight: 500;
+}
+p { margin: 0 0 1rem; max-width: 40rem; }
+p.lede { color: var(--ink-soft); }
+ul, ol { max-width: 40rem; padding-left: 1.15rem; }
+li { margin-bottom: .4rem; }
+li::marker { color: var(--ink-mute); }
+strong { font-weight: 600; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+code, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .85em; }
+code { background: var(--surface-sunk); padding: .1em .34em; border-radius: 3px; }
+
+pre {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 1rem 1.15rem; overflow-x: auto; font-size: .84rem; line-height: 1.55;
+  font-family: "IBM Plex Mono", monospace; margin: 0 0 1rem;
+}
+pre .t { color: var(--accent); }
+
+/* tables */
+.tablewrap { overflow-x: auto; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 28rem; }
+th {
+  text-align: left; font-family: "IBM Plex Mono", monospace; font-weight: 500;
+  font-size: .67rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-mute); border-bottom: 1px solid var(--rule);
+  padding: 0 1rem .5rem 0; vertical-align: bottom;
+}
+td {
+  padding: .62rem 1rem .62rem 0; border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top; color: var(--ink-soft);
+}
+td:first-child { color: var(--ink); font-weight: 500; }
+th:last-child, td:last-child { padding-right: 0; }
+
+/* figure */
+figure { margin: 1.6rem 0 1.2rem; }
+figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
+.figbox {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 1.4rem 1rem 1rem; overflow-x: auto;
+}
+figcaption {
+  font-size: .85rem; color: var(--ink-mute); margin-top: .85rem;
+  max-width: 38rem; line-height: 1.5;
+}
+svg .fill-surface { fill: var(--surface); }
+svg .fill-sunk { fill: var(--surface-sunk); }
+svg .accent { color: var(--accent); }
+svg .mute { color: var(--ink-mute); }
+svg text { font-family: "IBM Plex Sans", sans-serif; fill: currentColor; }
+svg text.lbl {
+  font-family: "IBM Plex Mono", monospace; font-size: 10.5px;
+  letter-spacing: .02em;
+}
+svg text.sub { font-size: 10.5px; opacity: .72; }
+svg text.node { font-size: 12.5px; font-weight: 500; }
+
+/* callouts */
+.note {
+  background: var(--accent-soft); border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent); border-radius: 3px;
+  padding: 1rem 1.25rem; margin: 0 0 1.2rem;
+}
+.note p:last-child { margin-bottom: 0; }
+.note.warn { background: var(--counter-soft); border-left-color: var(--counter); }
+
+/* decision cards */
+.decisions { display: grid; gap: 1rem; counter-reset: dec; }
+.decision {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 1.1rem 1.3rem 1.15rem 3.2rem; position: relative; box-shadow: var(--shadow);
+}
+.decision::before {
+  counter-increment: dec; content: "D" counter(dec);
+  position: absolute; left: 1.15rem; top: 1.15rem;
+  font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--accent);
+}
+.decision h3 { margin: 0 0 .45rem; font-size: 1rem; }
+.decision p { margin: 0 0 .55rem; font-size: .94rem; color: var(--ink-soft); }
+.decision p:last-child { margin-bottom: 0; }
+.decision .rec {
+  font-size: .88rem; color: var(--ink); border-top: 1px solid var(--rule-soft);
+  padding-top: .55rem; margin-top: .7rem;
+}
+.decision .rec b {
+  font-family: "IBM Plex Mono", monospace; font-size: .74rem;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--accent);
+  display: block; margin-bottom: .1rem;
+}
+
+/* status pills */
+.pill {
+  display: inline-block; font-family: "IBM Plex Mono", monospace;
+  font-size: .67rem; letter-spacing: .07em; text-transform: uppercase;
+  padding: .12em .5em; border-radius: 2px; white-space: nowrap;
+}
+.pill.built { background: var(--good-soft); color: var(--good); }
+.pill.todo { background: var(--counter-soft); color: var(--counter); }
+.pill.na { background: var(--surface-sunk); color: var(--ink-mute); }
+
+/* rollout */
+.phases { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.phase {
+  display: grid; grid-template-columns: 7.5rem 1fr; gap: 1.2rem;
+  padding: 1rem 0; border-bottom: 1px solid var(--rule-soft);
+}
+.phase-n {
+  font-family: "IBM Plex Mono", monospace; font-size: .75rem; color: var(--accent);
+  padding-top: .15rem;
+}
+.phase h3 { margin: 0 0 .3rem; font-size: .95rem; }
+.phase p { margin: 0; font-size: .93rem; color: var(--ink-soft); }
+@media (max-width: 34rem) {
+  .phase { grid-template-columns: 1fr; gap: .3rem; }
+  .decision { padding-left: 1.3rem; }
+  .decision::before { position: static; display: block; margin-bottom: .3rem; }
+}
+
+.closer {
+  margin-top: 3.4rem; border-top: 2px solid var(--ink); padding-top: 1.4rem;
+}
+.closer p {
+  font-family: Newsreader, Georgia, serif; font-size: 1.15rem; line-height: 1.55;
+  color: var(--ink-soft); max-width: 36rem;
+}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Design document · for review</p>
+  <h1>Harness Attribution and Telemetry</h1>
+  <p class="standfirst">How we tell whether the Claude SDLC harness is actually improving productivity, developer experience, and quality on the Common Platform — and what it costs to find out.</p>
+  <div class="masthead-meta">
+    <span><b>Status</b> proposed</span>
+    <span><b>Repo</b> hmcts/cpp-claude</span>
+    <span><b>Plugin</b> hmcts-sdlc-orchestrator@1.2.0</span>
+    <span><b>Revision</b> 2.1 — attribution moved out of git history; collector designed</span>
+    <span><b>Feedback by</b> — </span>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>Why this exists</h2></div>
+  <p>The harness is initiative 2 on the continuous improvement roadmap, and its Q4 milestone
+  is <em>“standardise &amp; measure”</em>. Today we cannot do the second half. We can say how many
+  agents and skills the plugin ships; we cannot say whether a PR that used them was faster,
+  safer, or better than one that did not.</p>
+  <p>That gap matters in both directions. Without evidence, a genuine win goes unrecognised
+  and unfunded — and a quality regression goes unnoticed until it reaches a courtroom.
+  HMCTS assurance will reasonably ask for the second before accepting the first.</p>
+
+  <div class="note warn">
+    <p><strong>This is time-critical in one specific way.</strong> Attribution cannot be
+    reconstructed after the fact. Every week the harness spreads without something recording
+    which commits it produced is a week of data we can never segment. That is the only part of
+    this design with a deadline attached, and it is the cheapest part to build.</p>
+  </div>
+
+  <div class="note">
+    <p><strong>What changed in revision 2.</strong> The first version of this design put an
+    <code>Assisted-By:</code> trailer in the commit message. That was withdrawn: most CPP
+    repositories are public, and a permanent, world-readable AI-assistance marker on the history
+    of a criminal justice system is a liability we cannot retract once published. Attribution now
+    lives in a <strong>local index keyed by commit SHA</strong>. Section 04 sets out the reasoning and
+    what it costs; the trade is real and it is decision <b>D3</b> below.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>Goals and non-goals</h2></div>
+  <h3>Goals</h3>
+  <ul>
+    <li>Segment delivery and quality data into harness-assisted and unassisted work, using systems we already run.</li>
+    <li>Show which of the ~15 skills and 8 pipeline agents are actually used, so the dead weight can be deleted.</li>
+    <li>Measure how often a human gate rejects an agent's output — the only direct quality signal we have per agent.</li>
+    <li>Collect all of it without recording anything that could identify a developer or leak case data.</li>
+  </ul>
+  <h3>Non-goals</h3>
+  <ul>
+    <li><strong>Individual performance measurement.</strong> Explicitly out of scope, and the design is shaped to make it difficult rather than merely discouraged.</li>
+    <li><strong>Replacing Azure DevOps, Jira, or SonarQube.</strong> Those stay the systems of record; this adds the one field they lack.</li>
+    <li><strong>Counting lines or percentage of AI-written code.</strong> Both reward volume over judgement and get gamed within a sprint. We will not collect them.</li>
+    <li><strong>Real-time dashboards.</strong> Monthly review cadence is enough to act on.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>How it works</h2></div>
+  <p>Three small components, all local to the developer's machine, feeding one local store
+  that a reporting script joins against git. No service to run, no network call on the hook
+  path, and nothing added to anything that gets pushed.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 890 400" role="img" aria-label="Data flow: a Claude Code session drives the telemetry hook, which appends usage events to a local JSONL log and writes session state. Git post-commit, post-rewrite and pre-push hooks read that state and record commit SHAs into the same local log. The commit itself travels to the public git remote unchanged, carrying no AI marker. harness_metrics.py joins the local log against git log to produce a report. A collector shipping logs to a shared backend is not built and is required for any team-level number.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- sources -->
+        <g>
+          <rect x="16" y="30" width="152" height="62" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+          <text class="node" x="92" y="55" text-anchor="middle">Claude session</text>
+          <text class="sub" x="92" y="72" text-anchor="middle">agents · skills</text>
+
+          <rect x="16" y="168" width="152" height="64" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+          <text class="node" x="92" y="192" text-anchor="middle">git</text>
+          <text class="sub" x="92" y="209" text-anchor="middle">commit · amend</text>
+          <text class="sub" x="92" y="223" text-anchor="middle">rebase · push</text>
+
+          <rect x="16" y="300" width="152" height="56" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+          <text class="node" x="92" y="324" text-anchor="middle">/gate</text>
+          <text class="sub" x="92" y="341" text-anchor="middle">reviewer's verdict</text>
+        </g>
+
+        <!-- components -->
+        <g>
+          <rect x="214" y="30" width="196" height="62" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+          <text class="lbl" x="312" y="55" text-anchor="middle">harness-telemetry.sh</text>
+          <text class="sub" x="312" y="72" text-anchor="middle">SessionStart · PostToolUse · End</text>
+
+          <rect x="214" y="110" width="196" height="42" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1"/>
+          <text class="lbl" x="312" y="130" text-anchor="middle">session state</text>
+          <text class="sub" x="312" y="145" text-anchor="middle">version · stages · session id</text>
+
+          <rect x="214" y="168" width="196" height="64" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+          <text class="lbl" x="312" y="190" text-anchor="middle">git hooks</text>
+          <text class="sub" x="312" y="206" text-anchor="middle">post-commit · post-rewrite</text>
+          <text class="sub" x="312" y="220" text-anchor="middle">pre-push · chain to husky</text>
+
+          <rect x="214" y="300" width="196" height="56" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+          <text class="lbl" x="312" y="324" text-anchor="middle">record-gate.sh</text>
+          <text class="sub" x="312" y="340" text-anchor="middle">fixed vocabulary</text>
+        </g>
+
+        <!-- stores -->
+        <rect x="460" y="52" width="190" height="92" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+        <text class="node" x="555" y="76" text-anchor="middle">event log</text>
+        <text class="sub" x="555" y="94" text-anchor="middle">~/.cpp-harness · JSONL</text>
+        <text class="sub" x="555" y="110" text-anchor="middle">usage events</text>
+        <text class="sub" x="555" y="126" text-anchor="middle">+ commit SHA index</text>
+
+        <g class="accent">
+          <rect x="460" y="180" width="190" height="76" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1.5"/>
+          <text class="node" x="555" y="205" text-anchor="middle">git history</text>
+          <text class="sub" x="555" y="223" text-anchor="middle">pushed to public remote</text>
+          <text class="sub" x="555" y="240" text-anchor="middle">no AI marker of any kind</text>
+        </g>
+
+        <!-- reader -->
+        <rect x="700" y="100" width="175" height="56" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+        <text class="lbl" x="787" y="124" text-anchor="middle">harness_metrics.py</text>
+        <text class="sub" x="787" y="140" text-anchor="middle">joins on SHA</text>
+
+        <rect x="700" y="196" width="175" height="56" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1"/>
+        <text class="node" x="787" y="220" text-anchor="middle">report</text>
+        <text class="sub" x="787" y="237" text-anchor="middle">text · markdown · json</text>
+
+        <!-- not built -->
+        <g class="mute">
+          <rect x="700" y="14" width="175" height="50" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3"/>
+          <text class="lbl" x="787" y="35" text-anchor="middle">collector</text>
+          <text class="sub" x="787" y="51" text-anchor="middle">not built · now required</text>
+        </g>
+
+        <!-- arrows -->
+        <g fill="none" stroke="currentColor" stroke-width="1.2">
+          <line x1="168" y1="61" x2="208" y2="61" marker-end="url(#ar)"/>
+          <line x1="312" y1="92" x2="312" y2="104" marker-end="url(#ar)"/>
+          <line x1="168" y1="200" x2="208" y2="200" marker-end="url(#ar)"/>
+          <line x1="312" y1="152" x2="312" y2="162" marker-end="url(#ar)"/>
+          <line x1="410" y1="185" x2="454" y2="146" marker-end="url(#ar)"/>
+          <line x1="410" y1="68" x2="454" y2="86" marker-end="url(#ar)"/>
+          <line x1="168" y1="328" x2="208" y2="328" marker-end="url(#ar)"/>
+          <polyline points="410,328 434,328 434,118 454,118" marker-end="url(#ar)"/>
+          <line x1="650" y1="110" x2="694" y2="120" marker-end="url(#ar)"/>
+          <line x1="650" y1="204" x2="694" y2="152" marker-end="url(#ar)"/>
+          <line x1="787" y1="156" x2="787" y2="190" marker-end="url(#ar)"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-width="1.4" class="accent">
+          <polyline points="92,232 92,278 555,278 555,262" marker-end="url(#ar)"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" class="mute">
+          <line x1="650" y1="68" x2="694" y2="46" marker-end="url(#ar)"/>
+        </g>
+
+        <!-- arrow labels -->
+        <g class="mute">
+          <text class="sub" x="188" y="52" text-anchor="middle">events</text>
+          <text class="sub" x="322" y="104" text-anchor="start">writes</text>
+          <text class="sub" x="188" y="191" text-anchor="middle">fire</text>
+          <text class="sub" x="322" y="163" text-anchor="start">reads session</text>
+          <text class="sub" x="416" y="160" text-anchor="start">records SHA</text>
+          <text class="sub" x="418" y="66" text-anchor="start">appends</text>
+          <text class="sub" x="440" y="296" text-anchor="start">appends</text>
+          <text class="sub" x="654" y="100" text-anchor="start">reads</text>
+          <text class="sub" x="652" y="190" text-anchor="start">git log</text>
+        </g>
+        <g class="accent">
+          <text class="sub" x="300" y="272" text-anchor="middle">the commit itself — unchanged</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>The blue path is the one that reaches the public remote, and it carries nothing
+    about the harness: the git hooks observe the commit and write its SHA to the local log, but
+    never touch the commit. Everything else stays in <code>~/.cpp-harness</code> on the developer's
+    laptop — which is why the collector, drawn dashed because it is designed but not yet built,
+    is now a prerequisite rather than a refinement. Its shape is in section 08.</figcaption>
+  </figure>
+
+  <p>The important property is that no component can break the developer's work.
+  <code>post-commit</code> and <code>post-rewrite</code> run after the git objects exist and git
+  ignores their exit status; <code>pre-push</code> only ever passes through the verdict of a hook
+  that was already there; the telemetry hook always exits 0. The previous revision's
+  <code>prepare-commit-msg</code> was the one piece that mutated a commit, and it is gone.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>Component 1 — the attribution index</h2></div>
+  <p class="lede">This is the part of the design that changed, and the part most worth
+  reading closely.</p>
+
+  <h3>Why not a commit trailer</h3>
+  <p>The obvious design is a trailer in the commit message — <code>Assisted-By:
+  hmcts-sdlc-orchestrator@1.2.0</code>. It is self-describing, needs no infrastructure, survives
+  cloning, and is what most teams do. It was our first design.</p>
+  <p>It was withdrawn for one reason: <strong>the majority of CPP repositories are public.</strong>
+  A permanent, world-readable AI-assistance marker on the commit history of a criminal justice
+  system is a standing liability. It cannot be retracted — removing it would mean rewriting
+  published history across roughly 145 repositories — and once published, what it signifies is
+  decided by whoever reads it, not by us.</p>
+
+  <div class="note warn">
+    <p><strong>Do not solve this with an opaque marker.</strong> <code>X-CPP-Pipeline: 3f2a</code> is
+    durable, needs no collector, and looks like meaningless internal noise. It is also
+    concealment rather than absence, and its failure mode is worse than the one it avoids:
+    <em>HMCTS hid AI attribution behind a code</em> is a better story than <em>HMCTS used AI
+    assistance</em>, and the marker being obviously deliberate is what makes it one. If a marker
+    is not safe to explain, it does not belong in a public repository.</p>
+  </div>
+
+  <h3>What replaces it</h3>
+  <p>Three git hooks record commit SHAs into the same local log as the usage telemetry. The
+  commit that reaches the remote is byte-for-byte what the developer wrote.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Hook</th><th>Records</th><th>Why it is needed</th></tr></thead>
+      <tbody>
+        <tr><td><code>post-commit</code></td><td><span class="mono">commit_recorded</span> — SHA, harness version, stages</td><td>The attribution itself. Requires a live session, which is what makes it an attribution rather than a guess</td></tr>
+        <tr><td><code>post-rewrite</code></td><td><span class="mono">commit_rewritten</span> — old SHA → new SHA</td><td>A SHA is not stable. Without this, one rebase orphans the attribution — and tidying before review is the norm here</td></tr>
+        <tr><td><code>pre-push</code></td><td><span class="mono">branch_pushed</span> — tip SHA, remote ref</td><td>The join key for PR-level metrics in Azure DevOps, which is where cycle time and change failure rate actually live</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The reader walks the rewrite chain forward, so attribution stays attached to the commit
+  rather than to the hash. Two consequences are worth stating plainly: <code>post-rewrite</code> and
+  <code>pre-push</code> run <em>without</em> a live Claude session, because rebases and pushes routinely
+  happen days after the work and requiring a session would break the chain exactly when it
+  matters; and cherry-pick is not covered at all, because git does not fire
+  <code>post-rewrite</code> for it. That last one is an undercount, and an acceptable one.</p>
+
+  <h3>Recording is automatic, never remembered</h3>
+  <p>Unchanged from the previous revision and still the most important property. A marker a
+  developer has to remember would be missing perhaps a third of the time, and the missing third
+  would not be random — it would skew toward rushed work, which is exactly the population the
+  quality comparison needs. Absence has to mean “not assisted”, so absence has to be trustworthy.
+  <code>SessionEnd</code> closes the attribution window, with an 8-hour TTL as a backstop for crashed
+  sessions, so a manual commit made afterwards is not mis-attributed.</p>
+
+  <h3>What this costs</h3>
+  <p>Stated up front so nobody discovers it in a review:</p>
+  <ul>
+    <li><strong>The collector stops being optional.</strong> Trailers worked with zero infrastructure. This does not — until logs are collected centrally, a report covers one machine. This is why D4 has moved to the front of the queue.</li>
+    <li><strong>A fresh clone shows 0% assisted</strong>, correctly and unhelpfully. The index does not travel with the repository.</li>
+    <li><strong>Squash-merge becomes a join, not a fact.</strong> Azure DevOps builds the squash commit server-side, so there is no local SHA to catch. The route is PR → source commits → index, which works but is more fragile than reading a trailer off a merge commit.</li>
+    <li><strong>No permanent provenance record.</strong> Asked in two years which code was AI-assisted, we could answer only for the retention window and only for machines that reported. If a <em>disclosure obligation</em> turns out to apply, this design does not discharge it — see D3.</li>
+    <li><strong>PR tagging can no longer be a pipeline one-liner.</strong> With trailers, <code>context-verify.yaml</code> could grep the commits at build time. Now the signal has to reach ADO from the developer's machine, which means the collector has to exist first.</li>
+  </ul>
+
+  <div class="note">
+    <p><strong>What we gain beyond the political point.</strong> The index is <em>revocable</em> —
+    deleting <code>~/.cpp-harness</code> removes every record, which makes “you can withdraw your
+    data” a true statement rather than an awkward one. And the hooks no longer touch the commit
+    at all, which removes the one component in the previous design that could have broken
+    somebody's workflow.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>Component 2 — the telemetry hook</h2></div>
+  <p><code>harness-telemetry.sh</code> is wired to <code>SessionStart</code>, <code>SessionEnd</code>, <code>Stop</code>, and
+  <code>PostToolUse</code> on <code>Skill|Task|Agent|Write|Edit</code>. It appends one JSON object per line to
+  a monthly local file. It never blocks and always exits 0 — telemetry must not be able to
+  break a session.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Event</th><th>Emitted on</th><th>Feeds</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">session_start</span> / <span class="mono">session_end</span></td><td>Session lifecycle</td><td>Weekly actives, sessions per developer, repo coverage</td></tr>
+        <tr><td><span class="mono">skill_used</span></td><td><code>Skill</code> tool</td><td><strong>Per-skill invocation counts</strong> — which of ~15 skills earn their keep</td></tr>
+        <tr><td><span class="mono">agent_used</span></td><td><code>Task</code>/<code>Agent</code> tool</td><td>Per-stage agent usage; pipeline entry and completion</td></tr>
+        <tr><td><span class="mono">artefact_written</span></td><td>Write under <code>docs/pipeline/</code></td><td>Pipeline completion rate</td></tr>
+        <tr><td><span class="mono">gate_decision</span></td><td><code>/gate</code> command</td><td><strong>Gate rejection rate by stage</strong></td></tr>
+        <tr><td><span class="mono">commit_recorded</span></td><td><code>post-commit</code> git hook</td><td><strong>The assisted/unassisted split</strong> underneath every flow and quality metric</td></tr>
+        <tr><td><span class="mono">commit_rewritten</span></td><td><code>post-rewrite</code> git hook</td><td>Keeps that split intact across amend and rebase</td></tr>
+        <tr><td><span class="mono">branch_pushed</span></td><td><code>pre-push</code> git hook</td><td>Join key for PR-level metrics in Azure DevOps</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The per-skill breakdown is the highest-value line in that table and the one teams
+  routinely skip. It is what tells us which skills to invest in and which to delete.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>Component 3 — the gate command</h2></div>
+  <p>At each of the six human gates, <code>/gate &lt;stage&gt; &lt;accept|edit|reject&gt; [reason]</code> records
+  what the reviewer decided. Reasons come from a fixed vocabulary
+  (<span class="mono">incomplete</span>, <span class="mono">wrong-pattern</span>,
+  <span class="mono">missed-standard</span>, <span class="mono">hallucinated</span>,
+  <span class="mono">style</span>, <span class="mono">scope-creep</span>,
+  <span class="mono">other</span>); free text is rejected outright, because logs are retained
+  and the PII rule applies to them too.</p>
+  <p>This is the only manual step in the design, and it is manual because gate outcomes
+  genuinely cannot be inferred from tool calls. It is also the highest-value data we can
+  collect: it reads in both directions. A <code>requirements-analyst</code> rejected 60% of the time
+  is a prompt problem fixable in a week. A <code>code-reviewer</code> rejected 5% of the time may
+  instead mean reviewers have stopped reading — the more dangerous failure, invisible in
+  every other metric, and indistinguishable from excellence unless someone looks.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">07</span><h2>Component 4 — the reader</h2></div>
+  <p><code>scripts/harness_metrics.py</code> reads the event log, joins its recorded SHAs
+  against <code>git log</code> across the workspace, and reports
+  adoption, per-skill and per-agent usage, repo coverage, pipeline abandonment, gate
+  rejection rate, and assisted-commit share. Standard library only; read-only; three output
+  formats (terminal, markdown for the monthly review, JSON for a future collector).</p>
+  <p>It <strong>deliberately refuses</strong> to compute change failure rate, defect escape rate, PR review
+  turnaround, cycle time, CI first-pass rate, and the SonarQube trend. Those need Azure
+  DevOps, Jira, and Sonar. Rather than substitute a local proxy that would get read as the
+  real thing, the report prints them in a “not derivable locally” table naming the API each
+  one needs. Two readings are editorialised in the output for the same reason: a 0% reject
+  rate warns that it may mean reviewers stopped reading, and an empty index prints the
+  <code>git config --get core.hooksPath</code> check, since “not used” and “hooks not installed”
+  are otherwise indistinguishable.</p>
+  <p>It also prints an <strong>index health</strong> block — commits recorded, rewrites followed,
+  and how many recorded commits could not be found in the scanned history. That last number is
+  the honest cost of keeping the marker out of the commit, and it has to be read before the
+  assisted percentage is quoted anywhere: a high count means the percentage is an undercount,
+  not that the harness is unused. Superseded SHAs are excluded from it, or every routine rebase
+  would make the index look broken.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">08</span><h2>Component 5 — the collector</h2></div>
+  <p class="lede">The one component that does not exist. This section proposes its shape so the
+  question in <b>D4</b> is a choice between concrete options rather than an open field.</p>
+
+  <p>Attribution now lives in a file on a laptop. Until those files are gathered somewhere,
+  every number in section 07 describes exactly one machine — and a report that says
+  “38% assisted” while covering 40 of 120 developers is not a small error, it is a different
+  claim. That is the structural cost of revision 2, and the collector is what pays it.</p>
+
+  <h3>What it has to do</h3>
+  <p>Three things, in priority order. Get the local JSONL off the machine <em>without ever
+  sitting on the path of a commit</em>. Reach Azure DevOps, so <code>branch_pushed</code> can be
+  joined to PR source branches — that join is the only thing that lets cycle time, review
+  turnaround, change failure rate and CI first-pass be split assisted against unassisted.
+  And, third, not quietly rebuild at the ingest point the identifiability this whole revision
+  exists to avoid. The third is the one that is easy to get wrong.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg viewBox="0 0 800 360" role="img" aria-label="Collector data flow. On the developer's laptop, a shipper reads the local JSONL event log using a watermark and sends batches on SessionEnd and daily. Batches cross an internal-network boundary reachable only on VPN, to an ingest service on the management gateway which authenticates the developer, checks group membership and drops their identity before forwarding rows to a dedicated Log Analytics workspace. A monthly Azure DevOps pipeline queries that workspace with KQL and joins it against Azure DevOps, Jira and SonarQube data to produce the ten metrics, published to the existing Grafana.">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- network boundary -->
+        <g class="mute">
+          <line x1="386" y1="26" x2="386" y2="336" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3"/>
+          <text class="sub" x="386" y="18" text-anchor="middle">internal network — VPN only</text>
+        </g>
+
+        <!-- laptop side -->
+        <rect x="16" y="40" width="150" height="80" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+        <text class="node" x="91" y="64" text-anchor="middle">event log</text>
+        <text class="sub" x="91" y="82" text-anchor="middle">~/.cpp-harness</text>
+        <text class="sub" x="91" y="98" text-anchor="middle">JSONL · source of truth</text>
+
+        <rect x="196" y="40" width="150" height="80" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+        <text class="lbl" x="271" y="64" text-anchor="middle">shipper</text>
+        <text class="sub" x="271" y="82" text-anchor="middle">SessionEnd + daily</text>
+        <text class="sub" x="271" y="98" text-anchor="middle">watermark · retriable</text>
+
+        <!-- platform side -->
+        <g class="accent">
+          <rect x="406" y="40" width="170" height="80" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+          <text class="lbl" x="491" y="64" text-anchor="middle">ingest service</text>
+          <text class="sub" x="491" y="82" text-anchor="middle">mgmt gateway</text>
+          <text class="sub" x="491" y="98" text-anchor="middle">drops caller identity</text>
+        </g>
+
+        <rect x="616" y="40" width="170" height="80" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+        <text class="node" x="701" y="64" text-anchor="middle">Log Analytics</text>
+        <text class="sub" x="701" y="82" text-anchor="middle">dedicated workspace</text>
+        <text class="sub" x="701" y="98" text-anchor="middle">retention · purge</text>
+
+        <rect x="406" y="182" width="170" height="72" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+        <text class="node" x="491" y="206" text-anchor="middle">ADO · Jira · Sonar</text>
+        <text class="sub" x="491" y="224" text-anchor="middle">PRs · stories · scans</text>
+        <text class="sub" x="491" y="240" text-anchor="middle">already collected</text>
+
+        <rect x="616" y="182" width="170" height="72" rx="3" class="fill-surface" stroke="currentColor" stroke-width="1.5"/>
+        <text class="lbl" x="701" y="206" text-anchor="middle">monthly job</text>
+        <text class="sub" x="701" y="224" text-anchor="middle">ADO pipeline</text>
+        <text class="sub" x="701" y="240" text-anchor="middle">joins on branch_pushed</text>
+
+        <rect x="616" y="290" width="170" height="52" rx="3" class="fill-sunk" stroke="currentColor" stroke-width="1"/>
+        <text class="node" x="701" y="312" text-anchor="middle">Grafana</text>
+        <text class="sub" x="701" y="329" text-anchor="middle">already running</text>
+
+        <!-- arrows -->
+        <g fill="none" stroke="currentColor" stroke-width="1.2">
+          <line x1="166" y1="80" x2="190" y2="80" marker-end="url(#ar2)"/>
+          <line x1="576" y1="80" x2="610" y2="80" marker-end="url(#ar2)"/>
+          <line x1="701" y1="120" x2="701" y2="176" marker-end="url(#ar2)"/>
+          <line x1="576" y1="218" x2="610" y2="218" marker-end="url(#ar2)"/>
+          <line x1="701" y1="254" x2="701" y2="284" marker-end="url(#ar2)"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-width="1.4" class="accent">
+          <line x1="346" y1="80" x2="400" y2="80" marker-end="url(#ar2)"/>
+        </g>
+
+        <!-- arrow labels -->
+        <g class="mute">
+          <text class="sub" x="178" y="72" text-anchor="middle">tails</text>
+          <text class="sub" x="593" y="72" text-anchor="middle">rows</text>
+          <text class="sub" x="708" y="152" text-anchor="start">KQL</text>
+          <text class="sub" x="593" y="210" text-anchor="middle">join</text>
+        </g>
+        <g class="accent">
+          <text class="sub" x="373" y="140" text-anchor="middle">batched · queued when offline</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>The blue hop is the only new network path in the design, and it is the one the
+    governance argument rests on: batches queue locally until the developer is on the network,
+    and the identity used to authenticate them is discarded at the boundary rather than stored
+    alongside the data. Everything to the right of it already exists on the platform.</figcaption>
+  </figure>
+
+  <h3>Where it runs</h3>
+  <p>Nothing here needs to be procured or invented. Read off the programme's own terraform and
+  the environment dashboard's deployment notes:</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Piece</th><th>Proposal</th><th>Already on the platform</th></tr></thead>
+      <tbody>
+        <tr><td>Event store</td><td>A <strong>new, dedicated</strong> Log Analytics workspace</td><td>64 <code>azurerm_log_analytics_workspace</code> declarations; Azure Monitor private link scope in use</td></tr>
+        <tr><td>Ingest</td><td>Logs Ingestion API behind a small service on the mgmt gateway</td><td><code>azurerm_monitor_data_collection_rule</code> already used; the env dashboard is the deployment pattern</td></tr>
+        <tr><td>Monthly job</td><td>Scheduled Azure DevOps pipeline</td><td><code>MDV-ADO-AGENTS-01</code>, which already holds ADO, Jira and Sonar access</td></tr>
+        <tr><td>Presentation</td><td>Dashboards only, no new tool</td><td>Grafana at <code>grafana.mgmt01.dev.nl.cjscp.org.uk</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>A dedicated workspace, not an existing one.</strong> Retention, query access and purge
+  all scope to the workspace. Sharing a platform workspace would mean anyone holding reader on it
+  can read developer telemetry, and that the deletion promise cannot be kept without touching
+  unrelated data. A workspace of its own turns “we hold this for twelve months, these named people
+  can query it, and here is how it is deleted” from an assurance into a configuration.</p>
+
+  <p><strong>Not Splunk, and not Application Insights.</strong> Splunk is the security and audit sink;
+  routing developer-behaviour telemetry into it sends a signal we do not mean and would very
+  likely make deletion impossible by design. Application Insights is built for application
+  performance and gives weaker retention and purge control over what is, in substance, a research
+  dataset.</p>
+
+  <h3>Why a proxy rather than posting straight to Azure</h3>
+  <p>A laptop cannot use Managed Identity, and the hard rule against SAS tokens, connection
+  strings and account keys rules out every shared-secret route — so the developer authenticates
+  as themselves, whichever design we pick. Posting directly to an Azure data collection endpoint
+  would need no service at all, but it means the developer's identity is present at the front
+  door and “we do not know who sent this” becomes a statement about which table we query rather
+  than about what exists.</p>
+  <p>A small service in front of the workspace authenticates the developer, checks group
+  membership, discards the identity and forwards under its own workload identity. The
+  difference between <em>not stored</em> and <em>not collected</em> is exactly the difference this
+  revision was written to protect, and rebuilding identifiability at the ingest layer by accident
+  would be a worse outcome than never having moved attribution out of the commit. The env
+  dashboard profiles at 100m CPU and 128Mi under two hundred concurrent users; this does
+  strictly less work.</p>
+
+  <h3>The shipper</h3>
+  <p>A <code>SessionEnd</code> hook plus a daily catch-up, reading unshipped lines against a
+  watermark. It is deliberately <em>not</em> called from the git hooks: a network call on the
+  commit path would put a VPN drop or a slow endpoint between a developer and their own commit,
+  which is the one property this design has protected throughout. The local JSONL stays the
+  source of truth, which is also what keeps <code>rm -rf ~/.cpp-harness</code> an honest deletion
+  rather than a partial one.</p>
+
+  <h3>What the collector still cannot fix</h3>
+  <p>Coverage remains a caveat, not a solved problem — a report covers the machines that
+  reported, and “untracked” must never be read as “unassisted”. The mgmt gateway is internal, so
+  telemetry arrives in bursts when people connect: an empty day is not evidence of an idle day,
+  and the monthly job has to be written knowing that. Squash-merge and cherry-pick lose
+  attribution exactly as described in section 12, and the collector does not change either.</p>
+
+  <p><strong>Before building any of it.</strong> Run the pilot without a collector — five to ten
+  volunteers, each running <code>harness_metrics.py</code> locally and sending the JSON by hand. It
+  does not scale and is not meant to. What it buys is finding out whether these are the right ten
+  metrics, and how badly real rebase and squash-merge behaviour degrades attribution in practice,
+  before a quarter has been spent on a pipeline that measures the wrong thing accurately.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">09</span><h2>What is and is not collected</h2></div>
+  <p class="lede">This section is the one most worth challenging. If anything here looks wrong
+  for our context, say so before rollout rather than after.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Collected</th><th>Not collected</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Event kind and UTC timestamp</td>
+          <td>Prompt text — any of it</td>
+        </tr>
+        <tr>
+          <td>Session id (12 chars, opaque)</td>
+          <td>File contents</td>
+        </tr>
+        <tr>
+          <td>Repo <em>basename</em> and branch name</td>
+          <td>Absolute paths — <code>/Users/&lt;name&gt;/…</code> identifies a person</td>
+        </tr>
+        <tr>
+          <td>Skill / agent name, pipeline stage</td>
+          <td>Developer name, email, hostname, hardware id</td>
+        </tr>
+        <tr>
+          <td>Gate decision + fixed reason code</td>
+          <td>Free text, anywhere</td>
+        </tr>
+        <tr>
+          <td>Commit SHAs, and old→new SHA pairs</td>
+          <td>Commit messages, diffs, or anything derived from them</td>
+        </tr>
+        <tr>
+          <td>Remote <em>name</em> and pushed branch ref</td>
+          <td>Remote URLs</td>
+        </tr>
+        <tr>
+          <td>A random installation id — see below</td>
+          <td>Case data, court references, PII of any kind</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align:center"><strong>And nothing at all in the commit itself.</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The installation id, and why it exists</h3>
+  <p>Building the reader exposed a hole in the original design: with no identifying field at
+  all, <em>“weekly active developers”</em> — the headline adoption metric — is uncomputable.
+  Distinct sessions is not a substitute, because one person in five sessions looks identical
+  to five people in one.</p>
+  <p>So the hook writes an <code>install</code> field: twelve random hex characters, generated once,
+  stored in a local file, <strong>not</strong> derived from name, email, hostname, or hardware. It
+  never leaves <code>~/.cpp-harness</code> and never touches git. Deleting the file yields a new
+  one and breaks nothing.</p>
+  <p>The honest framing: this makes <em>counting</em> people possible while keeping
+  <em>identifying</em> them impossible without access to that person's laptop. It is a real, if
+  minimal, widening of what we collect, and it is the item in this document most deserving
+  of a second opinion.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">10</span><h2>Governance</h2></div>
+  <p>This produces data about how people work, so the constraints on its use are part of the
+  design, not an afterthought:</p>
+  <ul>
+    <li><strong>Aggregate only.</strong> Team and programme level. No per-developer breakdowns, no league tables, no performance-management use. The index carries no identity field specifically to make the wrong analysis harder to run by accident.</li>
+    <li><strong>Announce before enabling.</strong> Developers should know attribution is recorded before their first tagged commit, not discover it in a dashboard.</li>
+    <li><strong>Opt-out is honoured and untracked.</strong> <code>CPP_HARNESS_TELEMETRY=off</code> suppresses both the usage log and the attribution index. A high opt-out rate is a finding about trust in the programme and should be read that way, not engineered around.</li>
+    <li><strong>Deletion is real, and should be documented as such.</strong> <code>rm -rf ~/.cpp-harness</code> removes every record held on that machine, retroactively — which is only true because attribution is not in the commit. Once a collector exists the same must hold centrally, and that is part of what D4 has to settle.</li>
+    <li><strong>Consult the appropriate forum</strong> — departmental trade union side and staff engagement — before programme-wide rollout. Five minutes now is far cheaper than retrofitting consent onto six months of data.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">11</span><h2>Rollout</h2></div>
+  <div class="phases">
+    <div class="phase">
+      <div class="phase-n">Phase 0</div>
+      <div>
+        <h3>Baseline</h3>
+        <p>Pull 3–6 months of pre-harness cycle time, change failure rate, and defect escape from Azure DevOps and Jira. Every comparison below is meaningless without it, and the history is cleanest now while adoption is still narrow.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-n">Phase 1</div>
+      <div>
+        <h3>Attribution first, one team</h3>
+        <p>Hooks and telemetry on a single team, including at least one <code>cpp-ui-*</code> repo to prove the husky chaining across <code>post-commit</code> and <code>pre-push</code>. Confirm the merge strategy per repo — under squash-merge the commit-level numbers become a PR-level join.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-n">Phase 2</div>
+      <div>
+        <h3>Announce, then widen</h3>
+        <p>Governance conversation — including the disclosure question in D3 — then the <code>core.hooksPath</code> line into the onboarding script.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-n">Phase 3</div>
+      <div>
+        <h3>Collection <span class="pill todo">now blocking</span></h3>
+        <p>Run the manual pilot first — five to ten volunteers exporting by hand — then build the collector as drawn in section 08, then the ADO PR-tagging job that joins <span class="mono">branch_pushed</span> to PR source branches. Until this exists a report covers one developer at a time — which under the new design is the difference between a metric and an anecdote. Destination, retention, query access, and deletion get decided <em>before</em> it is built.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-n">Phase 4</div>
+      <div>
+        <h3>Monthly review</h3>
+        <p>Ten metrics, reviewed monthly against the <a href="https://claude.ai/code/artifact/0a983215-bde1-40d8-9dcc-c112024c99be">measurement framework</a>. Expect the three-month answer to be “adoption is uneven and two skills do most of the work” — that is a useful finding, and it tells us where the next quarter goes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">12</span><h2>Risks</h2></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Risk</th><th>Mitigation</th><th>Residual</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>core.hooksPath</code> is global and overrides per-repo hooks</td>
+          <td>All three shipped hooks chain to <code>.husky/</code> and <code>.git/hooks/</code>; <code>pre-push</code> propagates a non-zero exit, so a repo that legitimately blocks a push still blocks it</td>
+          <td>Teams already setting <code>core.hooksPath</code> need a manual merge. Pilot on a UI repo first</td>
+        </tr>
+        <tr>
+          <td><strong>The index is per-machine.</strong> Without a collector, any cross-team number is wrong</td>
+          <td>The reader reports index health, and a fresh clone reads 0% rather than silently under-reporting</td>
+          <td>High. This is the structural cost of the revision, and it is why D4 blocks</td>
+        </tr>
+        <tr>
+          <td>Squash-merge leaves no local SHA to match</td>
+          <td>Join through the PR: ADO knows the source branch, <span class="mono">branch_pushed</span> maps it back to the index</td>
+          <td>Needs the collector. Confirm merge policy per repo</td>
+        </tr>
+        <tr>
+          <td>Cherry-pick silently drops attribution</td>
+          <td>None available — git does not fire <code>post-rewrite</code> for it</td>
+          <td>Accepted undercount. Small in practice, and it biases <em>against</em> the harness, which is the safer direction</td>
+        </tr>
+        <tr>
+          <td>Git hooks cannot be installed by the plugin</td>
+          <td>One <code>git config --global</code> line, put in the onboarding script rather than a wiki page</td>
+          <td>Uneven install means uneven attribution — and it looks identical to non-use</td>
+        </tr>
+        <tr>
+          <td><code>/gate</code> under-used, so the best metric stays empty</td>
+          <td>Command infers the stage where unambiguous; agents offer once and then drop it</td>
+          <td>Real. Nagging suppresses reporting, which corrupts the metric worse than sparse data does</td>
+        </tr>
+        <tr>
+          <td>Telemetry perceived as surveillance</td>
+          <td>No identity, aggregate-only reporting, honoured opt-out, consultation before rollout</td>
+          <td>Perception is not fully controllable by design choices. Announce early and plainly</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">13</span><h2>Decisions we would like your view on</h2></div>
+  <p class="lede">Everything above is reversible. These six are the ones where an outside
+  opinion changes what we build. <b>D3</b> is the one this revision turns on.</p>
+
+  <div class="decisions">
+    <div class="decision">
+      <h3>The pseudonymous installation id</h3>
+      <p>Without it we cannot count active developers at all. With it, a random opaque value
+      exists that distinguishes one laptop from another. Is that trade acceptable, or should
+      we accept a weaker adoption metric to collect strictly nothing?</p>
+      <p class="rec"><b>Our lean</b> Keep it, documented and opt-out-able. But this is the item we
+      most want challenged on the privacy side.</p>
+    </div>
+    <div class="decision">
+      <h3>Global <code>core.hooksPath</code></h3>
+      <p>It is the only mechanism that installs git hooks across 145 repos without touching
+      each one, and we have made all three chain safely. The alternative is per-repo
+      installation, which is honest but will decay.</p>
+      <p class="rec"><b>Our lean</b> Global, with the chaining hooks, piloted on a UI repo before
+      anyone else adopts it.</p>
+    </div>
+    <div class="decision">
+      <h3>Keeping every AI marker out of public git history — and whether something pulls the other way</h3>
+      <p>We have assumed the risk runs in one direction: a permanent, public
+      <code>Assisted-By</code> trailer on a criminal justice system's history is a liability, so we
+      removed it, and accepted a collector dependency, a per-machine blind spot, and the loss of
+      any durable provenance record to do it.</p>
+      <p>The assumption worth testing is whether an obligation runs the <em>other</em> way. ATRS is
+      aimed at algorithmic decision-making rather than developer tooling, so it probably does not
+      bite — but “probably” is doing real work in that sentence, and someone in the department
+      will know. If disclosure is required, the question becomes <em>where</em> it lives (a
+      service-level statement, a repo README, an ATRS record), not whether to hide it; a
+      per-commit trailer would be an odd way to discharge it in any case.</p>
+      <p>Worth knowing either way: <code>Co-Authored-By: Claude</code> is already common in public
+      repositories, including government ones, so the shock value may be lower than it feels. We
+      did not think that general observation should override a specific read of CPP's exposure.</p>
+      <p class="rec"><b>Our lean</b> Keep the marker out, and treat any disclosure obligation as a
+      separate, service-level statement rather than a commit-level one. Confirm before rollout —
+      this is the question we would most like answered by someone with departmental standing.</p>
+    </div>
+    <div class="decision">
+      <h3>Where should collected telemetry live, and for how long?</h3>
+      <p>Section 08 now proposes an answer — a dedicated Log Analytics workspace, an ingest
+      service on the mgmt gateway that discards the caller's identity, and a monthly Azure DevOps
+      job — so the open questions narrow to three: retention period, who holds query and purge
+      rights, and whether a dedicated workspace can be created in the right subscription.
+      <strong>This still blocks</strong>: with attribution held locally, nothing above team-of-one
+      scale works until the collector exists.</p>
+      <p class="rec"><b>Our lean</b> Build it as drawn in section 08, with 12-month retention,
+      query access limited to named people who publish what they run, and a documented central
+      deletion path that matches the local one. Run the manual pilot first.</p>
+    </div>
+    <div class="decision">
+      <h3>Should stages record what ran, or what was accepted?</h3>
+      <p>Currently the index records what ran. Recording what a human accepted at the gate is
+      more meaningful, but depends on <code>/gate</code> being used consistently — which it may not
+      be.</p>
+      <p class="rec"><b>Our lean</b> Keep “run” in the index; keep “accepted” in the gate events.
+      They answer different questions.</p>
+    </div>
+    <div class="decision">
+      <h3>Is the governance framing sufficient?</h3>
+      <p>Aggregate-only, no identity, honoured opt-out, real deletion, consultation before
+      rollout. Is that the right bar for HMCTS, and is the trade union side the right forum, or
+      does this need a formal DPIA?</p>
+      <p class="rec"><b>Our lean</b> We do not know. This is a genuine question, not a rhetorical
+      one — guidance welcome.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">14</span><h2>Alternatives considered</h2></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Alternative</th><th>Why not</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A commit trailer (<code>Assisted-By:</code>)</strong> — the previous revision of this design</td><td>Most CPP repos are public. A permanent, world-readable AI-assistance marker on a criminal justice system's history cannot be retracted, and its meaning stops being ours once published. Withdrawn in favour of the local index, at a real cost — see section 04</td></tr>
+        <tr><td>An opaque in-history marker (<code>X-CPP-Pipeline: 3f2a</code>)</td><td>Concealment rather than absence. “Hid it behind a code” is a worse story than the one it avoids, and the deliberateness is what makes it one</td></tr>
+        <tr><td>Git notes (<code>refs/notes/*</code>)</td><td>Keeps the message clean, but a pushed note in a public repo is just as public; an unpushed one is a worse version of the local index, invisible to CI and to every other clone</td></tr>
+        <tr><td>Strip the trailer before push</td><td>Fragile, and it makes the mechanism look like something being hidden — which is precisely the perception to avoid</td></tr>
+        <tr><td>No per-commit attribution at all — compare teams or time windows instead</td><td>Genuinely viable and needs no instrumentation, but confounded by everything that differs between two teams or two quarters. Worth keeping as a sanity check on whatever the index says</td></tr>
+        <tr><td>Ask developers to add a marker by hand</td><td>Missing roughly a third of the time, and non-randomly — it would skew toward rushed work, biasing every quality comparison in the harness's favour</td></tr>
+        <tr><td>Infer assistance from commit-message style or timing</td><td>Guesswork presented as data. Worse than no metric, because it looks like one</td></tr>
+        <tr><td>OTel telemetry alone</td><td>Gives sessions and token spend, but has no notion of a pipeline stage, a gate, or which commit resulted. Complementary, not sufficient</td></tr>
+        <tr><td>A server-side service receiving events</td><td>Real infrastructure, real data-protection surface, and a network call on the hook path that developers would feel on every tool use</td></tr>
+        <tr><td>Track lines of code or % AI-written</td><td>Rewards volume over judgement and is gamed within a sprint. Explicitly refused</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">15</span><h2>Status</h2></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Piece</th><th>State</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Attribution spec</td><td><span class="pill built">built</span></td><td><code>docs/telemetry/attribution-index.md</code> — supersedes the withdrawn trailer convention</td></tr>
+        <tr><td>Telemetry hook</td><td><span class="pill built">built</span></td><td>Wired in <code>hooks/hooks.json</code>; tested end to end</td></tr>
+        <tr><td><code>post-commit</code>, <code>post-rewrite</code>, <code>pre-push</code></td><td><span class="pill built">built</span></td><td>Husky chaining, amend, multi-commit rebase, push, session-end and opt-out cases all verified end to end. Commit messages confirmed unmodified</td></tr>
+        <tr><td><code>/gate</code> + recorder</td><td><span class="pill built">built</span></td><td>Ships with the plugin as <code>/hmcts-sdlc-orchestrator:gate</code></td></tr>
+        <tr><td><code>harness_metrics.py</code></td><td><span class="pill built">built</span></td><td>Stdlib only; text, markdown, JSON. Joins on SHA, follows rewrite chains, reports index health</td></tr>
+        <tr><td>Plugin packaging</td><td><span class="pill built">built</span></td><td>Bumped to 1.2.0; validator passes</td></tr>
+        <tr><td>Collector / shipper</td><td><span class="pill todo">designed, not built</span></td><td><strong>Still blocking.</strong> Shape proposed in section 08; build gated on D4. Nothing above team-of-one scale works without it</td></tr>
+        <tr><td>ADO PR tagging</td><td><span class="pill todo">to do</span></td><td>Joins <span class="mono">branch_pushed</span> to PR source branches, server-side. Depends on the collector</td></tr>
+        <tr><td>ADO / Jira / Sonar pull</td><td><span class="pill todo">to do</span></td><td>The metrics that make the rest credible</td></tr>
+        <tr><td>Baseline extract</td><td><span class="pill na">not started</span></td><td>Should start regardless of the rest of this document</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="closer">
+  <p>The instrumentation is the easy half and it is already written — twice, now, because the
+  first version measured the right thing in a place we should not have put it. The hard half is
+  agreeing what we are willing to measure about ourselves, and then being honest about what the
+  numbers say when they arrive — including if they say the harness is not helping yet.</p>
+</div>
+
+</div>
