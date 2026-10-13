@@ -88,13 +88,25 @@ Work through these — omit a section only if genuinely not applicable, and say 
 - **Feature toggles** — should this ship behind a toggle? Where is it defined?
 - **Correlation** — MDC `correlationId` propagation across boundaries.
 
-### 6. Deployment & Ops
+### 6. Compatibility & Conflict Check
+Start from the "Impact on existing functionality" table in `docs/pipeline/requirements.md`. For every changed contract or shared resource, prove existing consumers keep working:
+- **Event consumers** — for each event added, changed, or newly published, list every subscriber across contexts (use `event-flow-mapper` output, or Grep subscription config and handlers). A changed event needs a new version; old handlers stay until all consumers migrate.
+- **API consumers** — for each changed REST endpoint, list callers (UI apps, other contexts, MbD services). Changes must be additive; run the `api-contract-check` skill to confirm no drift.
+- **Access control** — if Drools rules or roles change, check the same action is not granted/denied inconsistently elsewhere (use `rbac-auditor`).
+- **Data** — Liquibase changes follow expand → migrate → contract across separate releases; flag any destructive changeset for `migration-reviewer`.
+- **Shared UI** — components, routes, or govuk-frontend overrides reused by other `cpp-ui-*` apps.
+- **Work in flight** — for each Jira key in the requirements impact table, state whether designs touch the same aggregate, event, endpoint, or screen, and how the overlap is sequenced.
+- **Toggle** — if existing behaviour changes, define the feature toggle (`cpp-platform-libraries` feature control), its default (off), and what both states do.
+
+Any consumer that cannot be shown to be unaffected is a risk in section 8 and an ADR candidate.
+
+### 7. Deployment & Ops
 - Helm chart entry (`cpp-helm-chart`).
 - Flux config (`cpp-flux-config`).
 - Pipeline template (`context-verify` / `ui-verify` / custom MbD pipeline).
 - Environment rollout (dev → staging → live) and any data migration ordering.
 
-### 7. Risks & Alternatives
+### 8. Risks & Alternatives
 - At least one alternative considered and rejected, with reason.
 - Top 3 risks (technical, delivery, operational) with mitigation.
 - Reversibility — if this turns out to be wrong, how painful is the unwind?
@@ -141,6 +153,14 @@ Minimum diagrams to include when relevant:
 - AuthZ: …
 - Audit/metrics: …
 - Feature toggle: …
+
+### Compatibility & Conflicts
+| Changed contract / resource | Existing consumers | Impact | Mitigation |
+|---|---|---|---|
+| e.g. `HearingScheduled` v2 | listing, resulting | None — additive field | Old version still published |
+
+- Work in flight overlap: … (Jira keys, or "None")
+- Toggle: name, default, behaviour when off
 
 ### Deployment
 - Helm: …

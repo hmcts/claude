@@ -56,6 +56,13 @@ Mark each item: PASS / FAIL / N/A with a brief note.
 - Are there untested code paths?
 - Are edge cases handled?
 
+**Backward compatibility & conflicts**
+- Compare the diff against the "Compatibility & Conflicts" section of the design — flag any changed event, endpoint, schema, Drools rule, or shared UI component not listed there
+- Event/API changes are additive or versioned; no field removed or renamed in the same release
+- Liquibase changesets are non-destructive (expand/contract) and have rollback
+- Toggled behaviour: toggle-off path preserves existing behaviour and is tested
+- Regression tests for affected journeys exist and were not weakened or deleted in this PR
+
 **Security (HMCTS-specific)**
 - No secrets or credentials in code or comments
 - No PII in logs, error messages, or responses

@@ -97,6 +97,19 @@ For any story crossing a service boundary:
 - CQRS → CQRS or CQRS consumer: REST Assured against the RAML contract in `<context>-*-api/src/raml/`.
 - MbD producer or consumer: **Pact** consumer-driven contract test stub. Name pacts `<consumer>-<provider>.json`.
 
+### Step 5a — Protect existing behaviour
+Read the "Impact on existing functionality" table in `docs/pipeline/requirements.md` and the
+"Compatibility & Conflicts" section of the design. For each affected journey or consumer:
+- Locate the existing tests that cover it (Grep feature files, `*IT.java`, and `cpp-ui-e2e` specs).
+  Where coverage exists, list it; where it does not, add a `@regression` scenario asserting the
+  current behaviour **before** the new code lands.
+- If the feature ships behind a toggle, write the key scenarios for both states: toggle off
+  must reproduce current behaviour exactly.
+- For changed events or APIs, add a contract test proving the previous version is still
+  accepted/produced for existing consumers.
+
+Report any affected journey with no existing coverage as a gap in the halt summary.
+
 ### Step 6 — Commit and halt
 Commit all test files to the feature branch via GitHub MCP with message:
 `test(PROJ-NNN): A-TDD test scaffolding — [story title]`
@@ -114,3 +127,4 @@ Do not proceed to implementation until the user confirms test specs are approved
 - Accessibility: `@axe-core/webdriverjs` zero violations on all new pages in `cpp-ui-e2e`
 - Contract: required for all inter-service calls — REST Assured + RAML (CQRS) or Pact (MbD)
 - E2E: every user-visible AC has a Protractor spec in `cpp-ui-e2e` registered in `protractor.conf.ts`
+- Regression: every affected journey in the requirements impact table has a `@regression` test; toggled features are tested in both states
