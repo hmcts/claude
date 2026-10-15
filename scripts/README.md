@@ -5,6 +5,12 @@ built-in `/plugin validate` does not cover: cross-repo consistency with the
 `agentic-plugins-marketplace`, pointer-stub integrity, CLAUDE.md / README.md
 file-reference checks, and dangling skill references from agents and skills.
 
+`test_gate_hooks.sh` runs behavioural tests for the SDLC gate hooks
+(`enforce-gate.sh`, `record-gate.sh`) against both `.claude/hooks/` and the
+`plugin-draft/` mirror, in a scratch git repo with `CPP_HARNESS_STATE_DIR`
+redirected, so `~/.cpp-harness` is never touched. Needs `bash`, `git`, `jq` and
+`shasum`: `bash scripts/test_gate_hooks.sh`.
+
 ## Local run
 
 ```bash
@@ -34,6 +40,8 @@ script itself failed to run.
 | 6 | README.md references | Same, for the README's skill/agent tables. |
 | 7 | `skill: skills/...` path references | Agents reference skills via `skill: skills/review-checklist.md` lines — the target paths must resolve. |
 | 8 | Dangling skill names | `SKILL.md` or agent bodies referencing other skills by kebab-case name (`` `foo` skill``, `Task: foo`) must reference real ones. Prefix-gated to keep false positives low — this is the `openspec-sync-specs` bug class on the claude-repo side. |
+| 9 | plugin-draft mirrors | Every `plugin-draft/hmcts-sdlc-orchestrator/{agents,commands,hooks}/*` file and its `CLAUDE.md` must match the `.claude/` (or root) original. The only allowed difference is `${CLAUDE_PLUGIN_ROOT}/hooks/` in place of `.claude/hooks/`. A gate fix applied to one tree only fails CI. |
+| 10 | `/gate` is user-only | Both copies of `commands/gate.md` set `disable-model-invocation: true` (without it the assistant can call `/gate` through the Skill tool and open its own gate), and each runs the recorder by `` !`…` `` expansion from its own tree — `.claude/hooks/` in the repo, `${CLAUDE_PLUGIN_ROOT}/hooks/` in the plugin. |
 
 ## What this script intentionally does NOT check
 

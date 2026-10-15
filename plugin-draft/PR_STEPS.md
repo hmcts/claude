@@ -88,4 +88,10 @@ cp -R "$SRC/.claude/skills/"*    "$DEST/skills/"
 cp "$SRC/.claude/hooks/"*.sh     "$DEST/hooks/"
 cp -R "$SRC/.claude/commands/"*  "$DEST/commands/"
 cp "$SRC/.claude/context/"*.md   "$DEST/context/"
+
+# Plugin commands reach the hook scripts through ${CLAUDE_PLUGIN_ROOT}, not .claude/hooks/
+sed -i.bak 's#\.claude/hooks/#${CLAUDE_PLUGIN_ROOT}/hooks/#g' "$DEST/commands/gate.md" && rm "$DEST/commands/gate.md.bak"
 ```
+
+`python scripts/validate_claude_config.py` fails CI if the two trees drift (check 9) or if
+the plugin `gate.md` still points at `.claude/hooks/` (check 10).

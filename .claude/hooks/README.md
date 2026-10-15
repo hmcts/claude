@@ -17,22 +17,34 @@ Hooks block tool calls and prompts when input matches a known-bad pattern. They 
 
 | Script | Hook events | What it does |
 |---|---|---|
-| `enforce-gate.sh` | `PreToolUse:Task\|Agent`, `PreToolUse:Write\|Edit`, `UserPromptSubmit` | Blocks entry to a pipeline stage whose preceding **human gates** are not approved, and injects current gate state into context each turn. |
-| `record-gate.sh` | invoked by `/gate`, not a hook | Writes the gate state that `enforce-gate.sh` reads. |
+| `enforce-gate.sh` | `PreToolUse:Task\|Agent\|Bash\|Write\|Edit\|MultiEdit`, `UserPromptSubmit` | Blocks entry to a pipeline stage whose preceding **human gates** are not approved, blocks any assistant call that would change gate state, and injects current gate state into context each turn. |
+| `record-gate.sh` | run by `/gate`, not a hook | Writes the gate state that `enforce-gate.sh` reads. |
 
 The gates used to exist only as prose ("Halt at every human gate") in `CLAUDE.md` and in each
 agent file. Prose loses — it competes with a live user request and with whatever other SDD
 framework (superpowers, BMAD, Spec-Kit) is loaded in the same session. A `PreToolUse` hook
 exiting 2 is not an instruction: the tool call does not happen.
 
-Two surfaces are gated, because gating only the agent leaves the obvious hole open:
+Three surfaces are gated, because gating only the agent leaves the obvious hole open:
 
-- the `Task` call for the next stage's sub-agent, and
-- any `Write`/`Edit` under `docs/pipeline/` — the model skipping the sub-agent and writing
-  `user-stories/*.md` itself is the bypass that actually gets used.
+- the `Task`/`Agent` call for the next stage's sub-agent — bare (`story-writer`) or
+  plugin-namespaced (`hmcts-sdlc-orchestrator:story-writer`);
+- any `Write`/`Edit`/`MultiEdit` under `docs/pipeline/` — the model skipping the sub-agent and
+  writing `user-stories/*.md` itself is the bypass that actually gets used; and
+- `Bash` commands that write under `docs/pipeline/` by redirect, `tee`, `cp`/`mv`/`install`/
+  `rsync` or in-place `sed`/`perl` (heuristic — see Limits).
 
 Gate state lives in `~/.cpp-harness/gates/<hash>.json`, keyed by **repo + branch**, and is
-written only by `record-gate.sh` via the user-invoked `/gate` command:
+written only by `record-gate.sh`, which runs when the user types `/gate`:
+
+- `/gate` has `disable-model-invocation: true`, so the assistant cannot call it through the
+  Skill tool.
+- `/gate` runs the recorder by command expansion (`` !`…` ``), before the prompt reaches the
+  model. Command expansion does not go through `PreToolUse` hooks, so the user's own `/gate`
+  is not blocked.
+- `enforce-gate.sh` blocks assistant `Bash` calls that run `record-gate.sh` with anything but
+  `--status`, and any `Bash`/`Write`/`Edit`/`MultiEdit` that touches the gate state directory.
+  This holds whatever the gate state and ignores `CPP_GATES_OVERRIDE`.
 
 | `/gate` decision | Gate state | Effect |
 |---|---|---|
@@ -40,7 +52,8 @@ written only by `record-gate.sh` via the user-invoked `/gate` command:
 | `skip` | `skipped` | treated as satisfied — for stages that genuinely do not apply |
 | `reject` | `rejected` | stage stays locked and **all downstream stages reset to pending** |
 
-`record-gate.sh --status` prints the current state.
+`/gate` with no arguments (or `record-gate.sh --status`) prints the current state. Decision and
+stage can come in either order: `/gate approve requirements` = `/gate requirements approve`.
 
 ### Override
 
@@ -61,7 +74,6 @@ so bypasses are auditable rather than silent.
 | Force-push to `main`/`master` | `guard-bash.sh` |
 | Auto-approve all tool calls | `guard-bash.sh` (catches the flag inside Bash invocations) |
 | Edit prod Helm values without a human-driven flow | `guard-paths.sh` |
-
 | Advance an SDLC stage without human sign-off | `enforce-gate.sh` |
 
 The remaining Don'ts (review every line, architect sign-off on event flows, WCAG verification, legal review) are **not enforceable via hooks** — they belong in CODEOWNERS, branch protections, and `/ultrareview`.
@@ -107,6 +119,10 @@ echo '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_pa
 echo '{"hook_event_name":"PreToolUse","tool_name":"Task","tool_input":{"subagent_type":"requirements-analyst"}}' \
   | ./enforce-gate.sh; echo "exit=$?"
 
+# Should exit 2 (the assistant may not record its own gate decision)
+echo '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":".claude/hooks/record-gate.sh requirements approve"}}' \
+  | ./enforce-gate.sh; echo "exit=$?"
+
 # Should exit 0 (.env.example is allow-listed)
 echo '{"hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{"file_path":"/repo/.env.example"}}' \
   | ./guard-paths.sh; echo "exit=$?"
@@ -121,11 +137,17 @@ Set `CPP_HOOKS_DISABLE=1` in the environment to bypass for one session. Use spar
 - **Pattern matching is heuristic.** A determined paste of base64'd secrets won't be caught. Hooks raise the floor; they don't replace judgment.
 - **Gate enforcement fails open if `jq` is missing.** Blocking every tool call on a tooling
   gap would be worse than the gap, so `enforce-gate.sh` warns loudly and exits 0. Install `jq`.
-- **Hooks run on the user's machine.** They aren't a server-side control — anyone editing `settings.json` can disable them.
+- **The gate's `Bash` checks are heuristic too.** They match the recorder being run and the
+  common shell write forms (redirect, `tee`, `cp`/`mv`, `sed -i`). A script that writes the file
+  some other way (`python -c`, an encoded command) is not caught. Treat any such route as a
+  bypass; the hooks close the routes a model falls back to, not every route.
+- **Hooks run on the user's machine.** They aren't a server-side control — anyone editing `settings.json` can disable them, and so can an assistant with unrestricted `Edit` on the hook scripts or settings.
 - **No replacement for branch protection.** Server-side rules in Azure DevOps / GitHub remain the authoritative gate.
 
 ## Contributing
 
 - New patterns → add to the relevant script and update the smoke test list above.
+- Gate changes → add a case to `scripts/test_gate_hooks.sh` (it runs in CI against both this
+  directory and the `plugin-draft/` mirror).
 - Refining noisy patterns → prefer narrower regex over removing the rule.
 - Anything cross-team → propose via OpenSpec (`openspec/`) so the change is reviewed.

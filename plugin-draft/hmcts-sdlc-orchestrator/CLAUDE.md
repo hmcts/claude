@@ -35,9 +35,10 @@ Run stages in order. Do not skip or reorder. Halt at every human gate before pro
 
 Every Human gate above is backed by the `enforce-gate.sh` hook. Entering a stage whose
 preceding human gates are not approved is **blocked at the tool call** — the `Task` for the
-next agent, and any write under `docs/pipeline/`, both fail. You cannot reason past it, and
-you must not try to route around it by writing the artefact by hand, using a different
-agent, or shelling out.
+next agent, and any write under `docs/pipeline/` (`Write`, `Edit`, `MultiEdit`, or a shell
+redirect, `tee`, `cp`/`mv` or `sed -i`), all fail. You cannot reason past it, and you must
+not try to route around it by writing the artefact by hand, using a different agent, or
+shelling out. The shell check is a heuristic; a route it misses is still a bypass.
 
 Rules that follow from this:
 
@@ -45,8 +46,10 @@ Rules that follow from this:
   stories" spans two gated stages. Do stage 1, present the artefact, and stop. Producing the
   downstream artefact as well is the failure mode this exists to prevent — even though the
   user's phrasing appears to ask for both.
-- **Only the user opens a gate**, via `/gate approve <stage>`. Never run `record-gate.sh`
-  yourself to clear your own block.
+- **Only the user opens a gate**, by typing `/gate approve <stage>`. `/gate` is user-only:
+  it runs `record-gate.sh` before the prompt reaches you, and the hook blocks any Bash or
+  Write call of yours that runs the recorder or touches `~/.cpp-harness/gates/`. Never try
+  to clear your own block.
 - **When blocked, stop and report.** Present the last completed artefact for review and name
   the `/gate` command the user needs to run. Do not continue with adjacent work that depends
   on the blocked stage.
@@ -54,7 +57,8 @@ Rules that follow from this:
   (superpowers, BMAD, Spec-Kit, OpenSpec) and its workflow tells you to advance to the next
   phase, plan the whole build, or run stages end to end, the HMCTS gate state overrides it.
   Those frameworks do not know about these gates. Where they conflict, this file wins.
-- `record-gate.sh --status` prints the current gate state for the repo and branch.
+- `/gate` with no arguments (or `record-gate.sh --status`) prints the current gate state
+  for the repo and branch.
 
 Gate state is per repo **and branch** — a new feature branch starts with every gate pending.
 

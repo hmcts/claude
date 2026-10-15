@@ -3,17 +3,23 @@
 #
 # This is the only thing that changes gate state, and gate state is what
 # enforce-gate.sh reads to decide whether the next pipeline stage may start.
-# It is invoked by the user through the /gate command — never by the assistant
-# to clear its own block.
+# The user runs it by typing /gate: the command is user-only and runs this
+# script by command expansion, before the prompt reaches the assistant.
+# enforce-gate.sh blocks any assistant Bash call that names it (except --status).
 #
 # Usage:
-#   record-gate.sh <stage> <accept|approve|edit|reject|skip> [reason-code]
-#   record-gate.sh --status
+#   record-gate.sh <decision> <stage> [reason-code]   (any order)
+#   record-gate.sh [--status | status]                (no arguments = status)
 #
-# Stages:  requirements architecture user-story test-specs code
-#          code-review build-test deploy-sandbox
-# Reasons: incomplete wrong-pattern missed-standard hallucinated
-#          style scope-creep other        (optional, fixed vocabulary)
+# Decisions: accept approve edit reject skip
+# Stages:    requirements architecture user-story test-specs code
+#            code-review build-test deploy-sandbox
+# Reasons:   incomplete wrong-pattern missed-standard hallucinated
+#            style scope-creep other        (optional, fixed vocabulary)
+#
+# The three vocabularies are disjoint, so argument order does not matter:
+# `/gate approve requirements` (the form every message prints) and
+# `record-gate.sh requirements approve` record the same thing.
 #
 # Free text is not accepted — the reason is a fixed code. The state file is
 # retained and the hard rule against PII and case data applies here too.
@@ -26,11 +32,11 @@ REASONS="incomplete wrong-pattern missed-standard hallucinated style scope-creep
 
 usage() {
   cat >&2 <<EOF
-usage: record-gate.sh <stage> <decision> [reason]
-       record-gate.sh --status
+usage: /gate <decision> <stage> [reason]      (any order)
+       /gate                                  (show gate status)
 
-  stage     one of: $STAGES
   decision  one of: $DECISIONS
+  stage     one of: $STAGES
   reason    optional, one of: $REASONS
 
   accept   the artefact was used as produced          -> gate approved
@@ -38,11 +44,14 @@ usage: record-gate.sh <stage> <decision> [reason]
   edit     the artefact was usable but needed changes -> gate approved
   reject   the artefact was discarded or redone       -> gate rejected, downstream reset
   skip     the stage does not apply to this change    -> gate skipped
+
+Nothing was recorded.
 EOF
   exit 64
 }
 
-in_set() { grep -qw -- "$2" <<<"$1"; }
+# Exact membership of a word in a space-separated set.
+in_set() { case " $1 " in *" $2 "*) return 0 ;; esac; return 1; }
 
 STATE_DIR="${CPP_HARNESS_STATE_DIR:-$HOME/.cpp-harness}"
 GATE_DIR="$STATE_DIR/gates"
@@ -61,7 +70,7 @@ STATE_FILE="$GATE_DIR/$key.json"
 command -v jq >/dev/null 2>&1 || { echo "error: jq is required" >&2; exit 69; }
 
 # --- status ------------------------------------------------------------------
-if [[ "${1:-}" == "--status" ]]; then
+if [[ $# -eq 0 || "$1" == "--status" || "$1" == "status" ]]; then
   echo "repo: $repo   branch: $branch"
   for s in $STAGES; do
     st="pending"
@@ -71,13 +80,23 @@ if [[ "${1:-}" == "--status" ]]; then
   exit 0
 fi
 
-stage="${1:-}"; decision="${2:-}"; reason="${3:-}"
-[[ -z "$stage" || -z "$decision" ]] && usage
-in_set "$STAGES" "$stage" || { echo "error: unknown stage '$stage'" >&2; usage; }
-in_set "$DECISIONS" "$decision" || { echo "error: unknown decision '$decision'" >&2; usage; }
-if [[ -n "$reason" ]]; then
-  in_set "$REASONS" "$reason" || { echo "error: unknown reason '$reason'" >&2; usage; }
-fi
+stage=""; decision=""; reason=""
+for arg in "$@"; do
+  if in_set "$STAGES" "$arg"; then
+    [[ -n "$stage" ]] && { echo "error: more than one stage given ('$stage', '$arg')" >&2; usage; }
+    stage="$arg"
+  elif in_set "$DECISIONS" "$arg"; then
+    [[ -n "$decision" ]] && { echo "error: more than one decision given ('$decision', '$arg')" >&2; usage; }
+    decision="$arg"
+  elif in_set "$REASONS" "$arg"; then
+    [[ -n "$reason" ]] && { echo "error: more than one reason given ('$reason', '$arg')" >&2; usage; }
+    reason="$arg"
+  else
+    echo "error: '$arg' is not a known stage, decision or reason" >&2; usage
+  fi
+done
+[[ -z "$decision" ]] && { echo "error: no decision given" >&2; usage; }
+[[ -z "$stage" ]] && { echo "error: no stage given" >&2; usage; }
 
 # `approve` is a convenience alias; accept/edit/reject/skip stay the recorded
 # vocabulary so the decision history is consistent.

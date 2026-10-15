@@ -37,6 +37,7 @@ COMMANDS_DIR = REPO / ".claude" / "commands" / "opsx"
 SETTINGS_JSON = REPO / ".claude" / "settings.json"
 CLAUDE_MD = REPO / "CLAUDE.md"
 README_MD = REPO / "README.md"
+PLUGIN_DRAFT = REPO / "plugin-draft" / "hmcts-sdlc-orchestrator"
 MARKETPLACE_SUFFIX = "@agentic-plugins-marketplace"
 
 errors: list[str] = []
@@ -300,6 +301,59 @@ def check_dangling_skill_names() -> None:
                         )
 
 
+def check_plugin_draft_mirrors() -> None:
+    """plugin-draft/ copies of agents, commands, hooks and CLAUDE.md must match .claude/.
+
+    The plugin copy may differ only by reaching the hooks directory through
+    ${CLAUDE_PLUGIN_ROOT}/hooks/ instead of .claude/hooks/. Without this, a fix to
+    a gate script lands in one tree and silently not the other.
+    """
+    if not PLUGIN_DRAFT.exists():
+        return
+    pairs = [(CLAUDE_MD, PLUGIN_DRAFT / "CLAUDE.md")]
+    for sub in ("agents", "commands", "hooks"):
+        root = PLUGIN_DRAFT / sub
+        if not root.exists():
+            continue
+        for copy in root.rglob("*"):
+            original = REPO / ".claude" / sub / copy.relative_to(root)
+            if copy.is_file() and original.is_file():
+                pairs.append((original, copy))
+    for original, copy in pairs:
+        if not copy.exists():
+            continue
+        plugin_text = copy.read_text().replace("${CLAUDE_PLUGIN_ROOT}/hooks/", ".claude/hooks/")
+        if plugin_text != original.read_text():
+            fail(
+                f"{copy.relative_to(REPO)} has drifted from {original.relative_to(REPO)} "
+                f"— apply the same change to both"
+            )
+
+
+def check_gate_command_user_only() -> None:
+    """/gate writes the state the gate hook trusts, so the model must not be able to run it.
+
+    Each copy must also run the recorder from its own tree: a plugin copy still pointing
+    at .claude/hooks/ records nothing once installed.
+    """
+    copies = (
+        (REPO / ".claude" / "commands" / "gate.md", ".claude/hooks/record-gate.sh"),
+        (PLUGIN_DRAFT / "commands" / "gate.md", "${CLAUDE_PLUGIN_ROOT}/hooks/record-gate.sh"),
+    )
+    for gate_md, recorder in copies:
+        if not gate_md.exists():
+            continue
+        rel = gate_md.relative_to(REPO)
+        fm, body = parse_frontmatter(gate_md)
+        if fm is None or fm.get("disable-model-invocation") is not True:
+            fail(
+                f"{rel}: frontmatter must set `disable-model-invocation: true` "
+                f"— otherwise the assistant can open its own gate through the Skill tool"
+            )
+        if f"!`{recorder} " not in body:
+            fail(f"{rel}: must run the recorder by command expansion as `!`{recorder} ...``")
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -333,6 +387,8 @@ def main() -> int:
         ("README.md file references", check_readme_references),
         ("`skill: skills/...` path references", check_skill_path_references),
         ("dangling skill names", check_dangling_skill_names),
+        ("plugin-draft mirrors", check_plugin_draft_mirrors),
+        ("/gate is user-only", check_gate_command_user_only),
     ]
 
     for name, fn in checks:

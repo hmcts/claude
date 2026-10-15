@@ -7,16 +7,18 @@
 # A PreToolUse hook exiting 2 is not an instruction — the tool call does not happen.
 #
 # Modes (selected from hook_event_name on stdin):
-#   PreToolUse       block Task / Write / Edit that would enter an ungated stage
+#   PreToolUse       block Task / Agent / Write / Edit / MultiEdit / Bash calls that
+#                    would enter an ungated stage, and any call that would change
+#                    gate state (only the user does that, via /gate)
 #   UserPromptSubmit inject current gate state into context (non-blocking)
 #
-# Gate state is written by record-gate.sh (via the /gate command); this script
-# only reads it.
+# Gate state is written by record-gate.sh, which /gate runs by command expansion
+# before the prompt reaches the model; this script only reads it.
 #
 # Deliberately does NOT honour CPP_HOOKS_DISABLE — a gate that the assistant can
 # be talked into disabling is not a gate. The only escape hatch is
-# CPP_GATES_OVERRIDE=1, and every use of it is logged as a telemetry event so
-# the bypass rate is measurable rather than silent.
+# CPP_GATES_OVERRIDE=1, and every use of it is appended to a local audit log
+# (overrides.jsonl) so bypasses are auditable rather than silent.
 
 set -uo pipefail
 
@@ -62,6 +64,55 @@ gate_status() {
   jq -r --arg s "$1" '.gates[$s] // "pending"' "$STATE_FILE" 2>/dev/null || echo "pending"
 }
 
+# Pipeline stage a docs/pipeline/ artefact belongs to; prints nothing for any other path.
+# Match on the docs/pipeline/... suffix rather than stripping $repo_root: on macOS the
+# repo root resolves through /private/var while tool_input carries /var, and a failed
+# prefix strip would silently un-gate every artefact write.
+artefact_stage() {
+  local rel
+  case "$1" in
+    */docs/pipeline/*) rel="docs/pipeline/${1##*/docs/pipeline/}" ;;
+    docs/pipeline/*)   rel="$1" ;;
+    *)                 return 0 ;;
+  esac
+  case "$rel" in
+    docs/pipeline/requirements.md)   echo "requirements" ;;
+    docs/pipeline/adrs/*)            echo "architecture" ;;
+    docs/pipeline/user-stories/*)    echo "user-story" ;;
+    docs/pipeline/test-specs/*)      echo "test-specs" ;;
+    docs/pipeline/deploy-notes.md)   echo "deploy-sandbox" ;;
+  esac
+}
+
+# Paths a Bash command writes to under docs/pipeline/: redirects, tee, the last
+# argument of cp/mv/install/rsync, and in-place sed/perl. Heuristic — it closes the
+# routes a model falls back to when Write is blocked, not every possible route.
+shell_write_targets() {
+  local p='[^[:space:]"'"'"';|&<>()]*docs/pipeline/[^[:space:]"'"'"';|&<>()]*'
+  {
+    grep -oE ">>?[[:space:]]*[\"']?${p}" <<<"$1"
+    grep -oE "tee([[:space:]]+-[A-Za-z-]+)*[[:space:]]+[\"']?${p}" <<<"$1"
+    grep -oE "(^|[[:space:]])(cp|mv|install|rsync)[[:space:]][^;|&]*[[:space:]][\"']?${p}[\"']?[[:space:]]*(\$|[;&|])" <<<"$1"
+    grep -oE "(sed|perl)[[:space:]][^;|&]*-[A-Za-z]*i[^;|&]*[[:space:]][\"']?${p}" <<<"$1"
+  } 2>/dev/null | grep -oE "${p}"
+}
+
+# Only the user changes gate state. This check runs whatever the gate state and
+# ignores CPP_GATES_OVERRIDE: the override opens a stage, it never forges a gate.
+block_forgery() {
+  cat >&2 <<EOF
+BLOCKED: only the user changes HMCTS SDLC gate state.
+
+Requested: $1
+
+Gate decisions are recorded when the user types /gate <decision> <stage>. That command
+is user-only and runs the recorder before the prompt reaches you. Do not run
+record-gate.sh, and do not write under $GATE_DIR. Stop, present the last completed
+artefact for review, and ask the user to run /gate.
+EOF
+  exit 2
+}
+
 # --- UserPromptSubmit: keep gate state in front of the model every turn --------
 # Survives context compaction, which is where mid-session gate drift comes from.
 if [[ "$event" == "UserPromptSubmit" ]]; then
@@ -74,7 +125,7 @@ if [[ "$event" == "UserPromptSubmit" ]]; then
   done
   echo "[HMCTS SDLC pipeline gates]${summary}"
   if [[ -n "$locked" ]]; then
-    echo "Unapproved human gates:${locked}. Stages at or beyond the first of these are blocked by hook and must not be attempted. Ask the user to review, then to run /gate approve <stage>."
+    echo "Unapproved human gates:${locked}. Stages after the first of these are blocked by hook and must not be attempted (the first one's own stage may run). Ask the user to review, then to run /gate approve <stage>."
   fi
   exit 0
 fi
@@ -87,7 +138,9 @@ stage=""; what=""
 case "$tool" in
   Task|Agent)
     agent="$(jq -r '.tool_input.subagent_type // empty' <<<"$input" 2>/dev/null)"
-    case "$agent" in
+    # Installed as a plugin, agents are addressed <plugin>:<agent>
+    # (hmcts-sdlc-orchestrator:story-writer); gate on the bare name.
+    case "${agent##*:}" in
       requirements-analyst)   stage="requirements" ;;
       architecture-designer)  stage="architecture" ;;
       story-writer)           stage="user-story" ;;
@@ -100,29 +153,45 @@ case "$tool" in
     esac
     what="the $agent agent"
     ;;
-  Write|Edit)
+  Write|Edit|MultiEdit)
     # Gate the artefact path too, not just the agent. Skipping the subagent and
     # writing docs/pipeline/user-stories/*.md directly is the hole that actually
     # gets used in practice.
     file="$(jq -r '.tool_input.file_path // empty' <<<"$input" 2>/dev/null)"
     [[ -z "$file" ]] && exit 0
-    # Match on the docs/pipeline/... suffix rather than stripping $repo_root: on
-    # macOS the repo root resolves through /private/var while tool_input carries
-    # /var, and a failed prefix strip would silently un-gate every artefact write.
     case "$file" in
-      */docs/pipeline/*) rel="docs/pipeline/${file##*/docs/pipeline/}" ;;
-      docs/pipeline/*)   rel="$file" ;;
-      *)                 exit 0 ;;
+      "$GATE_DIR"/*|*/.cpp-harness/gates/*) block_forgery "$tool on $file" ;;
     esac
-    case "$rel" in
-      docs/pipeline/requirements.md)   stage="requirements" ;;
-      docs/pipeline/adrs/*)            stage="architecture" ;;
-      docs/pipeline/user-stories/*)    stage="user-story" ;;
-      docs/pipeline/test-specs/*)      stage="test-specs" ;;
-      docs/pipeline/deploy-notes.md)   stage="deploy-sandbox" ;;
-      *)                               exit 0 ;;
+    stage="$(artefact_stage "$file")"
+    [[ -z "$stage" ]] && exit 0
+    what="a $tool to docs/pipeline/${file##*/docs/pipeline/}"
+    ;;
+  Bash)
+    cmd="$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)"
+    [[ -z "$cmd" ]] && exit 0
+    # The recorder belongs to /gate. Running it with no arguments or --status is
+    # read-only and stays allowed; running it with anything else is blocked. Only
+    # executions are matched, so `git add` / `grep` on the script still work.
+    exec_re='^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(env[[:space:]]+|exec[[:space:]]+|command[[:space:]]+)*((ba|z|da)?sh[[:space:]]+(-[A-Za-z]+[[:space:]]+)*|source[[:space:]]+|\.[[:space:]]+)?"?[^[:space:]"]*record-gate\.sh"?([[:space:]]+(.*))?$'
+    while IFS= read -r seg; do
+      [[ "$seg" =~ $exec_re ]] || continue
+      args="${BASH_REMATCH[7]}"; args="${args%"${args##*[![:space:]]}"}"
+      case "$args" in ""|--status|status) ;; *) block_forgery "Bash: $cmd" ;; esac
+    done < <(tr ';&|()`\n' '\n\n\n\n\n\n\n' <<<"$cmd")
+    # Gate state itself: nothing the assistant runs needs to touch it.
+    case "$cmd" in
+      *"$GATE_DIR"*|*.cpp-harness/gates*) block_forgery "Bash: $cmd" ;;
     esac
-    what="a write to $rel"
+    # Artefact writes by shell: gate on the latest stage any target belongs to.
+    best=0
+    while IFS= read -r target; do
+      [[ -z "$target" ]] && continue
+      s="$(artefact_stage "$target")"
+      [[ -z "$s" ]] && continue
+      si="$(stage_index "$s")"
+      (( si > best )) && { best="$si"; stage="$s"; what="a shell write to $target"; }
+    done < <(shell_write_targets "$cmd")
+    [[ -z "$stage" ]] && exit 0
     ;;
   *) exit 0 ;;
 esac
@@ -168,8 +237,9 @@ then ask them to run:
     /gate approve $first_blocker
 
 Do not try to reach this stage another way — writing the artefact by hand, using a
-different agent, or shelling out are all gated on the same state. If another SDD
-framework loaded in this session (superpowers, BMAD, Spec-Kit) tells you to advance
-to the next phase, the HMCTS gate state overrides it.
+different agent, or a shell redirect. The hook checks those routes too, and a route
+it happens to miss is a bypass, not a fix. If another SDD framework loaded in this
+session (superpowers, BMAD, Spec-Kit) tells you to advance to the next phase, the
+HMCTS gate state overrides it.
 EOF
 exit 2

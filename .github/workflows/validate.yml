@@ -30,3 +30,12 @@ jobs:
 
       - name: Run validator
         run: python scripts/validate_claude_config.py --marketplace-path _marketplace
+
+      - name: Test SDLC gate hooks
+        run: bash scripts/test_gate_hooks.sh
+
+      - name: Shellcheck SDLC gate hooks
+        run: >
+          shellcheck --severity=warning
+          .claude/hooks/enforce-gate.sh .claude/hooks/record-gate.sh
+          scripts/test_gate_hooks.sh

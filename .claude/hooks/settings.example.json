@@ -30,7 +30,7 @@
         ]
       },
       {
-        "matcher": "Task|Agent",
+        "matcher": "Task|Agent|Bash|Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
@@ -52,10 +52,6 @@
           {
             "type": "command",
             "command": "$HOME/cpp/cpp-claude/.claude/hooks/guard-paths.sh"
-          },
-          {
-            "type": "command",
-            "command": "$HOME/cpp/cpp-claude/.claude/hooks/enforce-gate.sh"
           }
         ]
       },
