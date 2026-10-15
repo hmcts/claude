@@ -36,9 +36,9 @@ Run stages in order. Do not skip or reorder. Halt at every human gate before pro
 Every Human gate above is backed by the `enforce-gate.sh` hook. Entering a stage whose
 preceding human gates are not approved is **blocked at the tool call** — the `Task` for the
 next agent, and any write under `docs/pipeline/` (`Write`, `Edit`, `MultiEdit`, or a shell
-redirect, `tee`, `cp`/`mv` or `sed -i`), all fail. You cannot reason past it, and you must
-not try to route around it by writing the artefact by hand, using a different agent, or
-shelling out. The shell check is a heuristic; a route it misses is still a bypass.
+command naming a gated path that is not plainly read-only), all fail. You cannot reason past
+it, and you must not try to route around it by writing the artefact by hand, using a
+different agent, or shelling out. A route the hook happens to miss is still a bypass.
 
 Rules that follow from this:
 
@@ -48,8 +48,8 @@ Rules that follow from this:
   user's phrasing appears to ask for both.
 - **Only the user opens a gate**, by typing `/gate approve <stage>`. `/gate` is user-only:
   it runs `record-gate.sh` before the prompt reaches you, and the hook blocks any Bash or
-  Write call of yours that runs the recorder or touches `~/.cpp-harness/gates/`. Never try
-  to clear your own block.
+  Write call of yours that runs the recorder or touches `~/.cpp-harness/`. Never try to
+  clear your own block.
 - **When blocked, stop and report.** Present the last completed artefact for review and name
   the `/gate` command the user needs to run. Do not continue with adjacent work that depends
   on the blocked stage.

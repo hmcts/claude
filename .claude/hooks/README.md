@@ -31,8 +31,12 @@ Three surfaces are gated, because gating only the agent leaves the obvious hole 
   plugin-namespaced (`hmcts-sdlc-orchestrator:story-writer`);
 - any `Write`/`Edit`/`MultiEdit` under `docs/pipeline/` — the model skipping the sub-agent and
   writing `user-stories/*.md` itself is the bypass that actually gets used; and
-- `Bash` commands that write under `docs/pipeline/` by redirect, `tee`, `cp`/`mv`/`install`/
-  `rsync` or in-place `sed`/`perl` (heuristic — see Limits).
+- `Bash` commands that name a gated `docs/pipeline/` path — or an artefact directory, when
+  the command mentions the pipeline or runs inside it — unless the command is plainly
+  read-only (`cat`, `grep`, `head`, `git diff`, …). This fails closed; see Limits.
+
+Paths are resolved through symlinks, `..`, `./` and `//` before matching, and gate state is
+read for the repo the artefact lands in, not the repo the session happens to sit in.
 
 Gate state lives in `~/.cpp-harness/gates/<hash>.json`, keyed by **repo + branch**, and is
 written only by `record-gate.sh`, which runs when the user types `/gate`:
@@ -42,9 +46,10 @@ written only by `record-gate.sh`, which runs when the user types `/gate`:
 - `/gate` runs the recorder by command expansion (`` !`…` ``), before the prompt reaches the
   model. Command expansion does not go through `PreToolUse` hooks, so the user's own `/gate`
   is not blocked.
-- `enforce-gate.sh` blocks assistant `Bash` calls that run `record-gate.sh` with anything but
-  `--status`, and any `Bash`/`Write`/`Edit`/`MultiEdit` that touches the gate state directory.
-  This holds whatever the gate state and ignores `CPP_GATES_OVERRIDE`.
+- `enforce-gate.sh` blocks assistant `Bash` calls that name `record-gate.sh` unless they are
+  plainly read-only (`git add`, `grep`, …) or the bare `--status` call, any `Bash` call that
+  names the state directory, and any `Write`/`Edit`/`MultiEdit` that resolves into it. This
+  holds whatever the gate state and ignores `CPP_GATES_OVERRIDE`.
 
 | `/gate` decision | Gate state | Effect |
 |---|---|---|
@@ -137,10 +142,12 @@ Set `CPP_HOOKS_DISABLE=1` in the environment to bypass for one session. Use spar
 - **Pattern matching is heuristic.** A determined paste of base64'd secrets won't be caught. Hooks raise the floor; they don't replace judgment.
 - **Gate enforcement fails open if `jq` is missing.** Blocking every tool call on a tooling
   gap would be worse than the gap, so `enforce-gate.sh` warns loudly and exits 0. Install `jq`.
-- **The gate's `Bash` checks are heuristic too.** They match the recorder being run and the
-  common shell write forms (redirect, `tee`, `cp`/`mv`, `sed -i`). A script that writes the file
-  some other way (`python -c`, an encoded command) is not caught. Treat any such route as a
-  bypass; the hooks close the routes a model falls back to, not every route.
+- **The gate's `Bash` checks fail closed, but they read text, not intent.** Indirection gets
+  past any text check: a script written elsewhere and then run, a name split across quotes
+  (`rec''ord-gate.sh`), a path built at run time. The gate stops the routes a model falls back
+  to when blocked; it is not a sandbox against a model working to defeat it. A hard guarantee
+  needs `~/.cpp-harness` to be unwritable from the session (OS permissions or Claude Code's
+  Bash sandbox) — not yet evaluated together with `/gate`, which must still write there.
 - **Hooks run on the user's machine.** They aren't a server-side control — anyone editing `settings.json` can disable them, and so can an assistant with unrestricted `Edit` on the hook scripts or settings.
 - **No replacement for branch protection.** Server-side rules in Azure DevOps / GitHub remain the authoritative gate.
 

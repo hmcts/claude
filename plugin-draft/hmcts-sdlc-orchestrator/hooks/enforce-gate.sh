@@ -9,7 +9,9 @@
 # Modes (selected from hook_event_name on stdin):
 #   PreToolUse       block Task / Agent / Write / Edit / MultiEdit / Bash calls that
 #                    would enter an ungated stage, and any call that would change
-#                    gate state (only the user does that, via /gate)
+#                    gate state (only the user does that, via /gate). Paths are
+#                    resolved before matching; Bash commands that name a gated path,
+#                    the recorder or the state dir fail closed unless plainly read-only.
 #   UserPromptSubmit inject current gate state into context (non-blocking)
 #
 # Gate state is written by record-gate.sh, which /gate runs by command expansion
@@ -40,15 +42,45 @@ tool="$(jq -r '.tool_name // empty' <<<"$input" 2>/dev/null)"
 STATE_DIR="${CPP_HARNESS_STATE_DIR:-$HOME/.cpp-harness}"
 GATE_DIR="$STATE_DIR/gates"
 
-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-[[ -z "$repo_root" ]] && repo_root="$PWD"
-# symbolic-ref (not rev-parse --abbrev-ref) so an unborn branch resolves cleanly
-# instead of printing "HEAD" and exiting non-zero.
-branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
-[[ -z "$branch" ]] && branch="$(git -C "$repo_root" rev-parse --short HEAD 2>/dev/null || true)"
-[[ -z "$branch" ]] && branch="-"
-key="$(printf '%s|%s' "$repo_root" "$branch" | shasum | cut -c1-16)"
-STATE_FILE="$GATE_DIR/$key.json"
+# Where a path really lands: resolve the longest existing ancestor through the
+# filesystem (symlinks, .., //, ./), then fold the not-yet-existing tail lexically,
+# in the order mkdir -p and the kernel use. Relative paths resolve against $2 (or
+# $PWD, which follows the Bash tool's working directory). Pure bash 3.2 (macOS).
+canon_path() {
+  local p="$1" d tail="" part out
+  local -a parts=()
+  [[ "$p" == /* ]] || p="${2:-$PWD}/$p"
+  d="$p"
+  until [[ -d "$d" ]]; do
+    tail="/${d##*/}$tail"; d="${d%/*}"; [[ -z "$d" ]] && d="/"
+  done
+  out="$(cd "$d" 2>/dev/null && pwd -P)" || out="$d"
+  IFS=/ read -r -a parts <<<"$tail"
+  for part in ${parts[@]+"${parts[@]}"}; do
+    case "$part" in
+      ""|.) ;;
+      ..)   out="${out%/*}"; [[ -z "$out" ]] && out="/" ;;
+      *)    out="${out%/}/$part" ;;
+    esac
+  done
+  printf '%s\n' "$out"
+}
+
+STATE_CANON="$(canon_path "$STATE_DIR")"
+
+# Gate state is keyed by repo + branch; record-gate.sh derives the same key.
+use_repo() {
+  repo_root="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null || true)"
+  [[ -z "$repo_root" ]] && repo_root="$1"
+  # symbolic-ref (not rev-parse --abbrev-ref) so an unborn branch resolves cleanly
+  # instead of printing "HEAD" and exiting non-zero.
+  branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  [[ -z "$branch" ]] && branch="$(git -C "$repo_root" rev-parse --short HEAD 2>/dev/null || true)"
+  [[ -z "$branch" ]] && branch="-"
+  key="$(printf '%s|%s' "$repo_root" "$branch" | shasum | cut -c1-16)"
+  STATE_FILE="$GATE_DIR/$key.json"
+}
+use_repo "$PWD"
 
 stage_index() {
   local want="$1" i=0 st
@@ -84,17 +116,45 @@ artefact_stage() {
   esac
 }
 
-# Paths a Bash command writes to under docs/pipeline/: redirects, tee, the last
-# argument of cp/mv/install/rsync, and in-place sed/perl. Heuristic — it closes the
-# routes a model falls back to when Write is blocked, not every possible route.
-shell_write_targets() {
-  local p='[^[:space:]"'"'"';|&<>()]*docs/pipeline/[^[:space:]"'"'"';|&<>()]*'
-  {
-    grep -oE ">>?[[:space:]]*[\"']?${p}" <<<"$1"
-    grep -oE "tee([[:space:]]+-[A-Za-z-]+)*[[:space:]]+[\"']?${p}" <<<"$1"
-    grep -oE "(^|[[:space:]])(cp|mv|install|rsync)[[:space:]][^;|&]*[[:space:]][\"']?${p}[\"']?[[:space:]]*(\$|[;&|])" <<<"$1"
-    grep -oE "(sed|perl)[[:space:]][^;|&]*-[A-Za-z]*i[^;|&]*[[:space:]][\"']?${p}" <<<"$1"
-  } 2>/dev/null | grep -oE "${p}"
+# Shell metacharacters that make a command more than one plain command.
+has_shell_syntax() {
+  [[ "$1" == *[\;\&\<\>\`\$\(\)\{\}\\]* || "$1" == *$'\n'* ]]
+}
+
+# True only for a pipeline of commands that cannot write files: no redirects,
+# substitutions, separators, groups or escapes, and every stage on a short
+# allowlist. Everything else counts as a possible write — the Bash checks below
+# fail closed on it.
+is_read_only() {
+  local seg w1 w2 rest
+  has_shell_syntax "$1" && return 1
+  while IFS= read -r seg; do
+    read -r w1 w2 rest <<<"$seg"
+    case "$w1" in
+      cat|head|tail|wc|ls|grep|diff|cmp|stat|file) ;;
+      git)
+        case "$w2" in status|log|show|diff|blame|ls-files|add|commit) ;; *) return 1 ;; esac
+        [[ "$seg" == *--output* || "$seg" == *--ext-diff* ]] && return 1
+        ;;
+      *) return 1 ;;
+    esac
+  done < <(tr '|' '\n' <<<"$1")
+  return 0
+}
+
+# `record-gate.sh`, `record-gate.sh --status` or `... status`, run on its own.
+STATUS_RE='^[[:space:]]*((ba)?sh[[:space:]]+)?"?[^[:space:]"]*record-gate\.sh"?([[:space:]]+(--status|status))?[[:space:]]*$'
+is_status_call() { ! has_shell_syntax "$1" && [[ "$1" != *"|"* && "$1" =~ $STATUS_RE ]]; }
+
+# Raise $stage to the latest pipeline stage path $1 belongs to.
+best=0
+consider() {
+  local s si
+  s="$(artefact_stage "$1")"; [[ -z "$s" ]] && s="$(artefact_stage "$1/")"
+  [[ -z "$s" ]] && return 0
+  si="$(stage_index "$s")"
+  (( si > best )) && { best="$si"; stage="$s"; what="$2"; }
+  return 0
 }
 
 # Only the user changes gate state. This check runs whatever the gate state and
@@ -107,7 +167,7 @@ Requested: $1
 
 Gate decisions are recorded when the user types /gate <decision> <stage>. That command
 is user-only and runs the recorder before the prompt reaches you. Do not run
-record-gate.sh, and do not write under $GATE_DIR. Stop, present the last completed
+record-gate.sh, and do not touch $STATE_DIR. Stop, present the last completed
 artefact for review, and ask the user to run /gate.
 EOF
   exit 2
@@ -159,38 +219,47 @@ case "$tool" in
     # gets used in practice.
     file="$(jq -r '.tool_input.file_path // empty' <<<"$input" 2>/dev/null)"
     [[ -z "$file" ]] && exit 0
-    case "$file" in
-      "$GATE_DIR"/*|*/.cpp-harness/gates/*) block_forgery "$tool on $file" ;;
+    real="$(canon_path "$file")"
+    case "$real/" in
+      "$STATE_CANON"/*|*/.cpp-harness/*) block_forgery "$tool on $file" ;;
     esac
-    stage="$(artefact_stage "$file")"
+    stage="$(artefact_stage "$real")"
     [[ -z "$stage" ]] && exit 0
-    what="a $tool to docs/pipeline/${file##*/docs/pipeline/}"
+    # Gate on the repo the artefact lands in, not the one the session sits in.
+    dir="$real"; until [[ -d "$dir" ]]; do dir="${dir%/*}"; [[ -z "$dir" ]] && dir="/"; done
+    top="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null || true)"
+    [[ -n "$top" ]] && use_repo "$top"
+    what="a $tool to docs/pipeline/${real##*/docs/pipeline/}"
     ;;
   Bash)
     cmd="$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)"
     [[ -z "$cmd" ]] && exit 0
-    # The recorder belongs to /gate. Running it with no arguments or --status is
-    # read-only and stays allowed; running it with anything else is blocked. Only
-    # executions are matched, so `git add` / `grep` on the script still work.
-    exec_re='^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(env[[:space:]]+|exec[[:space:]]+|command[[:space:]]+)*((ba|z|da)?sh[[:space:]]+(-[A-Za-z]+[[:space:]]+)*|source[[:space:]]+|\.[[:space:]]+)?"?[^[:space:]"]*record-gate\.sh"?([[:space:]]+(.*))?$'
-    while IFS= read -r seg; do
-      [[ "$seg" =~ $exec_re ]] || continue
-      args="${BASH_REMATCH[7]}"; args="${args%"${args##*[![:space:]]}"}"
-      case "$args" in ""|--status|status) ;; *) block_forgery "Bash: $cmd" ;; esac
-    done < <(tr ';&|()`\n' '\n\n\n\n\n\n\n' <<<"$cmd")
-    # Gate state itself: nothing the assistant runs needs to touch it.
+    # The recorder belongs to /gate. A command that names it is allowed only when it
+    # is plainly read-only (git add, grep, ...) or the bare status call. Matching
+    # executions instead would lose to `{ ...; }`, `xargs`, `nohup` and friends.
+    if [[ "$cmd" == *record-gate* ]]; then
+      is_read_only "$cmd" || is_status_call "$cmd" || block_forgery "Bash: $cmd"
+    fi
+    # Gate state itself: nothing the assistant runs needs to touch it, read or write.
     case "$cmd" in
-      *"$GATE_DIR"*|*.cpp-harness/gates*) block_forgery "Bash: $cmd" ;;
+      *.cpp-harness*|*CPP_HARNESS_STATE_DIR*|*"$STATE_DIR"*|*"$STATE_CANON"*) block_forgery "Bash: $cmd" ;;
     esac
-    # Artefact writes by shell: gate on the latest stage any target belongs to.
-    best=0
-    while IFS= read -r target; do
-      [[ -z "$target" ]] && continue
-      s="$(artefact_stage "$target")"
-      [[ -z "$s" ]] && continue
-      si="$(stage_index "$s")"
-      (( si > best )) && { best="$si"; stage="$s"; what="a shell write to $target"; }
-    done < <(shell_write_targets "$cmd")
+    # Artefact writes by shell. Fail closed: unless the command is plainly read-only,
+    # gate it on the latest stage it names — a docs/pipeline/ path; an artefact
+    # directory when the command mentions the pipeline or runs inside it; or the
+    # directory it runs in.
+    is_read_only "$cmd" && exit 0
+    cwd_real="$(canon_path "$PWD")"
+    while IFS= read -r tok; do
+      [[ -n "$tok" ]] && consider "$(canon_path "$tok")" "a shell command on $tok"
+    done < <(grep -oE '[^[:space:]"'"'"';|&<>()`=]*docs/pipeline/[^[:space:]"'"'"';|&<>()`]*' <<<"$cmd")
+    if [[ "$cmd" == *pipeline* || "$cwd_real/" == */docs/pipeline/* ]]; then
+      [[ "$cmd" == *adrs* ]]         && consider "docs/pipeline/adrs/"           "a shell command on adrs/"
+      [[ "$cmd" == *user-stories* ]] && consider "docs/pipeline/user-stories/"   "a shell command on user-stories/"
+      [[ "$cmd" == *test-specs* ]]   && consider "docs/pipeline/test-specs/"     "a shell command on test-specs/"
+      [[ "$cmd" == *deploy-notes* ]] && consider "docs/pipeline/deploy-notes.md" "a shell command on deploy-notes.md"
+    fi
+    consider "$cwd_real" "a shell command run inside $cwd_real"
     [[ -z "$stage" ]] && exit 0
     ;;
   *) exit 0 ;;

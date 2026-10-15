@@ -31,6 +31,14 @@ expect_exit() {
   [[ "$got" == "$want" ]] && ok || bad "$desc — want exit $want, got $got"
 }
 
+# expect_exit_in <dir> <want> <description> <json> — same, with the Bash tool's cwd at <dir>
+expect_exit_in() {
+  local dir="$1" want="$2" desc="$3" json="$4" got
+  (cd "$dir" && printf '%s' "$json" | "$HOOKS/enforce-gate.sh" >/dev/null 2>&1)
+  got=$?
+  [[ "$got" == "$want" ]] && ok || bad "$desc — want exit $want, got $got"
+}
+
 task()  { printf '{"hook_event_name":"PreToolUse","tool_name":"Task","tool_input":{"subagent_type":"%s"}}' "$1"; }
 write() { jq -cn --arg t "$1" --arg f "$2" '{hook_event_name:"PreToolUse",tool_name:$t,tool_input:{file_path:$f}}'; }
 bash_() { jq -cn --arg c "$1" '{hook_event_name:"PreToolUse",tool_name:"Bash",tool_input:{command:$c}}'; }
@@ -61,6 +69,12 @@ for HOOKS in "${DIRS[@]}"; do
   expect_exit 2 "Write user story"     "$(write Write "$WORK/docs/pipeline/user-stories/US-1.md")"
   expect_exit 2 "Edit user story"      "$(write Edit "$WORK/docs/pipeline/user-stories/US-1.md")"
   expect_exit 2 "MultiEdit user story" "$(write MultiEdit "$WORK/docs/pipeline/user-stories/US-1.md")"
+  expect_exit 2 "Write via ./"         "$(write Write "$WORK/docs/pipeline/./user-stories/US-1.md")"
+  expect_exit 2 "Write via //"         "$(write Write "$WORK/docs/pipeline//user-stories/US-1.md")"
+  expect_exit 2 "Write via adrs/../"   "$(write Write "$WORK/docs/pipeline/adrs/../user-stories/US-1.md")"
+  expect_exit 2 "Write relative path"  "$(write Write "docs/pipeline/user-stories/US-1.md")"
+  mkdir -p "$WORK/docs/pipeline/user-stories" && ln -s "$WORK/docs/pipeline/user-stories" "$WORK/stories"
+  expect_exit 2 "Write via symlinked dir" "$(write Write "$WORK/stories/US-1.md")"
   expect_exit 0 "Write requirements.md (stage 1)" "$(write Write "$WORK/docs/pipeline/requirements.md")"
   expect_exit 0 "Write outside docs/pipeline"     "$(write Write "$WORK/src/Main.java")"
 
@@ -73,9 +87,20 @@ for HOOKS in "${DIRS[@]}"; do
   expect_exit 0 "Bash ls"          "$(bash_ 'ls docs/pipeline')"
   expect_exit 0 "Bash unrelated"   "$(bash_ 'git status')"
   expect_exit 2 "Bash sed -i"      "$(bash_ 'sed -i s/a/b/ docs/pipeline/user-stories/x.md')"
-  expect_exit 0 "Bash sed -n (read)" "$(bash_ 'sed -n 1p docs/pipeline/user-stories/x.md')"
-  expect_exit 0 "Bash cp out of docs/pipeline" "$(bash_ 'cp docs/pipeline/user-stories/x.md /tmp/')"
-  expect_exit 0 "Bash grep into /tmp" "$(bash_ 'grep -r AC docs/pipeline > /tmp/out.txt')"
+  expect_exit 0 "Bash head (read)" "$(bash_ 'head -5 docs/pipeline/user-stories/x.md')"
+  expect_exit 0 "Bash grep into /tmp, no gated path named" "$(bash_ 'grep -r AC docs/pipeline > /tmp/out.txt')"
+  # Fail closed: anything not on the read-only list that names a locked stage's path is gated.
+  expect_exit 2 "Bash sed -n (not on the read-only list)" "$(bash_ 'sed -n 1p docs/pipeline/user-stories/x.md')"
+  expect_exit 2 "Bash cp out of a locked stage" "$(bash_ 'cp docs/pipeline/user-stories/x.md /tmp/')"
+  expect_exit 2 "Bash python write"  "$(bash_ "python3 -c \"open('docs/pipeline/user-stories/x.md','w')\"")"
+  expect_exit 2 "Bash dd of="        "$(bash_ 'dd if=/dev/null of=docs/pipeline/user-stories/x.md')"
+  expect_exit 2 "Bash curl -o"       "$(bash_ 'curl -so docs/pipeline/test-specs/a.feature https://example.invalid')"
+  expect_exit 2 "Bash ./ in path"    "$(bash_ 'echo hi > docs/pipeline/./user-stories/x.md')"
+  expect_exit 2 "Bash cd into pipeline, relative write" "$(bash_ 'cd docs/pipeline && echo hi > user-stories/x.md')"
+  mkdir -p "$WORK/docs/pipeline/user-stories"
+  expect_exit_in "$WORK/docs/pipeline" 2 "Bash cwd in docs/pipeline, relative write" "$(bash_ 'echo hi > user-stories/x.md')"
+  expect_exit_in "$WORK/docs/pipeline/user-stories" 2 "Bash cwd in user-stories, bare write" "$(bash_ 'echo hi > x.md')"
+  expect_exit_in "$WORK/docs/pipeline/user-stories" 0 "Bash cwd in user-stories, read" "$(bash_ 'ls')"
 
   # --- F2: the assistant cannot clear its own gate -----------------------------
   expect_exit 2 "Bash record-gate.sh approve" "$(bash_ '.claude/hooks/record-gate.sh requirements approve')"
@@ -92,6 +117,18 @@ for HOOKS in "${DIRS[@]}"; do
   expect_exit 2 "Bash write to \$GATE_DIR"    "$(bash_ "jq . x > $GATES/forged.json")"
   expect_exit 2 "Write to gate state"         "$(write Write "$GATES/forged.json")"
   expect_exit 2 "Edit gate state"             "$(write Edit "$HOME/.cpp-harness/gates/abc.json")"
+  mkdir -p "$GATES" && ln -s "$CPP_HARNESS_STATE_DIR" "$TMP/alias"
+  expect_exit 2 "Write gate state via ./"      "$(write Write "$CPP_HARNESS_STATE_DIR/./gates/f.json")"
+  expect_exit 2 "Write gate state via ../"     "$(write Write "$TMP/nope/../state/gates/f.json")"
+  expect_exit 2 "Write gate state via symlink" "$(write Write "$TMP/alias/gates/f.json")"
+  expect_exit 2 "Bash { recorder; }"           "$(bash_ '{ .claude/hooks/record-gate.sh approve requirements; }')"
+  expect_exit 2 "Bash if/then recorder"        "$(bash_ 'if true; then .claude/hooks/record-gate.sh approve requirements; fi')"
+  expect_exit 2 "Bash nohup recorder"          "$(bash_ 'nohup .claude/hooks/record-gate.sh approve requirements')"
+  expect_exit 2 "Bash time recorder"           "$(bash_ 'time .claude/hooks/record-gate.sh approve requirements')"
+  expect_exit 2 "Bash xargs recorder"          "$(bash_ 'echo approve requirements | xargs .claude/hooks/record-gate.sh')"
+  expect_exit 2 "Bash ls state dir"            "$(bash_ 'ls ~/.cpp-harness')"
+  expect_exit 2 "Bash cd state dir then write" "$(bash_ "cd ~/.cpp-harness && echo '{}' > gates/f.json")"
+  expect_exit 0 "Bash git commit naming the recorder" "$(bash_ 'git commit -m "tidy record-gate.sh"')"
   CPP_HOOKS_DISABLE=1 expect_exit 2 "CPP_HOOKS_DISABLE does not open the recorder" "$(bash_ '.claude/hooks/record-gate.sh requirements approve')"
 
   # --- F4: stage / decision validation is exact --------------------------------
@@ -108,6 +145,10 @@ for HOOKS in "${DIRS[@]}"; do
   expect_exit 0 "story-writer after requirements+architecture approved" "$(task story-writer)"
   expect_exit 0 "plugin:story-writer after approval" "$(task hmcts-sdlc-orchestrator:story-writer)"
   expect_exit 2 "test-engineer while user-story pending" "$(task test-engineer)"
+  # Gate on the repo the artefact lands in: approvals here must not open another repo.
+  OTHER="$TMP/other"; mkdir -p "$OTHER/docs/pipeline" && git -C "$OTHER" init -q && git -C "$OTHER" checkout -q -b feat/x
+  expect_exit 2 "Write into another repo with its gates pending" "$(write Write "$OTHER/docs/pipeline/user-stories/US-9.md")"
+  expect_exit 0 "Write user story here once gates approved"      "$(write Write "$WORK/docs/pipeline/user-stories/US-9.md")"
 
   # --- reject rewinds downstream ----------------------------------------------
   record user-story approve
