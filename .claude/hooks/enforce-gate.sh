@@ -42,26 +42,32 @@ tool="$(jq -r '.tool_name // empty' <<<"$input" 2>/dev/null)"
 STATE_DIR="${CPP_HARNESS_STATE_DIR:-$HOME/.cpp-harness}"
 GATE_DIR="$STATE_DIR/gates"
 
-# Where a path really lands: resolve the longest existing ancestor through the
-# filesystem (symlinks, .., //, ./), then fold the not-yet-existing tail lexically,
-# in the order mkdir -p and the kernel use. Relative paths resolve against $2 (or
-# $PWD, which follows the Bash tool's working directory). Pure bash 3.2 (macOS).
+# Where a write to a path really lands, like `realpath -m`: walk it one component
+# at a time from /, following every symlink (including a dangling one, and the
+# last component, which a write would follow too), and fold . / .. / // as the
+# kernel does. Relative paths resolve against $2 (or $PWD, which follows the Bash
+# tool's working directory). Pure bash 3.2 (macOS has no realpath -m).
 canon_path() {
-  local p="$1" d tail="" part out
-  local -a parts=()
+  local p="$1" out="/" part next target i=0 hops=0
+  local -a parts=() tparts=()
   [[ "$p" == /* ]] || p="${2:-$PWD}/$p"
-  d="$p"
-  until [[ -d "$d" ]]; do
-    tail="/${d##*/}$tail"; d="${d%/*}"; [[ -z "$d" ]] && d="/"
-  done
-  out="$(cd "$d" 2>/dev/null && pwd -P)" || out="$d"
-  IFS=/ read -r -a parts <<<"$tail"
-  for part in ${parts[@]+"${parts[@]}"}; do
+  IFS=/ read -r -a parts <<<"$p"
+  while (( i < ${#parts[@]} )); do
+    part="${parts[i]}"; i=$((i + 1))
     case "$part" in
-      ""|.) ;;
-      ..)   out="${out%/*}"; [[ -z "$out" ]] && out="/" ;;
-      *)    out="${out%/}/$part" ;;
+      ""|.) continue ;;
+      ..)   out="${out%/*}"; [[ -z "$out" ]] && out="/"; continue ;;
     esac
+    next="${out%/}/$part"
+    if [[ -L "$next" ]] && (( hops++ < 40 )); then
+      target="$(readlink "$next")"
+      [[ "$target" == /* ]] || target="${out%/}/$target"
+      IFS=/ read -r -a tparts <<<"$target"
+      parts=(${tparts[@]+"${tparts[@]}"} ${parts[@]+"${parts[@]:i}"})
+      i=0; out="/"
+      continue
+    fi
+    out="$next"
   done
   printf '%s\n' "$out"
 }
@@ -126,16 +132,14 @@ has_shell_syntax() {
 # allowlist. Everything else counts as a possible write — the Bash checks below
 # fail closed on it.
 is_read_only() {
-  local seg w1 w2 rest
+  local seg w1 rest
   has_shell_syntax "$1" && return 1
   while IFS= read -r seg; do
-    read -r w1 w2 rest <<<"$seg"
+    read -r w1 rest <<<"$seg"
     case "$w1" in
       cat|head|tail|wc|ls|grep|diff|cmp|stat|file) ;;
-      git)
-        case "$w2" in status|log|show|diff|blame|ls-files|add|commit) ;; *) return 1 ;; esac
-        [[ "$seg" == *--output* || "$seg" == *--ext-diff* ]] && return 1
-        ;;
+      # Not git: add/status/diff/show can run configured programs (filters,
+      # textconv, fsmonitor, hooks), so no git subcommand is plainly read-only.
       *) return 1 ;;
     esac
   done < <(tr '|' '\n' <<<"$1")
@@ -234,14 +238,18 @@ case "$tool" in
   Bash)
     cmd="$(jq -r '.tool_input.command // empty' <<<"$input" 2>/dev/null)"
     [[ -z "$cmd" ]] && exit 0
-    # The recorder belongs to /gate. A command that names it is allowed only when it
-    # is plainly read-only (git add, grep, ...) or the bare status call. Matching
+    # Match names with quotes and backslashes removed, as the shell will: rec''ord,
+    # r\ecord and docs/pipe"line" are the same words once quote removal runs.
+    flat="${cmd//[\'\"\\]/}"
+    # The recorder belongs to /gate. A command that names it (or anything *gate.sh,
+    # which also catches globs like rec*-gate.sh) is allowed only when it is plainly
+    # read-only (cat, grep, ...) or the bare status call. Matching
     # executions instead would lose to `{ ...; }`, `xargs`, `nohup` and friends.
-    if [[ "$cmd" == *record-gate* ]]; then
+    if [[ "$flat" == *gate.sh* ]]; then
       is_read_only "$cmd" || is_status_call "$cmd" || block_forgery "Bash: $cmd"
     fi
     # Gate state itself: nothing the assistant runs needs to touch it, read or write.
-    case "$cmd" in
+    case "$flat" in
       *.cpp-harness*|*CPP_HARNESS_STATE_DIR*|*"$STATE_DIR"*|*"$STATE_CANON"*) block_forgery "Bash: $cmd" ;;
     esac
     # Artefact writes by shell. Fail closed: unless the command is plainly read-only,
@@ -252,12 +260,12 @@ case "$tool" in
     cwd_real="$(canon_path "$PWD")"
     while IFS= read -r tok; do
       [[ -n "$tok" ]] && consider "$(canon_path "$tok")" "a shell command on $tok"
-    done < <(grep -oE '[^[:space:]"'"'"';|&<>()`=]*docs/pipeline/[^[:space:]"'"'"';|&<>()`]*' <<<"$cmd")
-    if [[ "$cmd" == *pipeline* || "$cwd_real/" == */docs/pipeline/* ]]; then
-      [[ "$cmd" == *adrs* ]]         && consider "docs/pipeline/adrs/"           "a shell command on adrs/"
-      [[ "$cmd" == *user-stories* ]] && consider "docs/pipeline/user-stories/"   "a shell command on user-stories/"
-      [[ "$cmd" == *test-specs* ]]   && consider "docs/pipeline/test-specs/"     "a shell command on test-specs/"
-      [[ "$cmd" == *deploy-notes* ]] && consider "docs/pipeline/deploy-notes.md" "a shell command on deploy-notes.md"
+    done < <(grep -oE '[^[:space:];|&<>()`=]*docs/pipeline/[^[:space:];|&<>()`]*' <<<"$flat")
+    if [[ "$flat" == *pipeline* || "$cwd_real/" == */docs/pipeline/* ]]; then
+      [[ "$flat" == *adrs* ]]         && consider "docs/pipeline/adrs/"           "a shell command on adrs/"
+      [[ "$flat" == *user-stories* ]] && consider "docs/pipeline/user-stories/"   "a shell command on user-stories/"
+      [[ "$flat" == *test-specs* ]]   && consider "docs/pipeline/test-specs/"     "a shell command on test-specs/"
+      [[ "$flat" == *deploy-notes* ]] && consider "docs/pipeline/deploy-notes.md" "a shell command on deploy-notes.md"
     fi
     consider "$cwd_real" "a shell command run inside $cwd_real"
     [[ -z "$stage" ]] && exit 0

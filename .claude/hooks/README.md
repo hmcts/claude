@@ -33,7 +33,8 @@ Three surfaces are gated, because gating only the agent leaves the obvious hole 
   writing `user-stories/*.md` itself is the bypass that actually gets used; and
 - `Bash` commands that name a gated `docs/pipeline/` path — or an artefact directory, when
   the command mentions the pipeline or runs inside it — unless the command is plainly
-  read-only (`cat`, `grep`, `head`, `git diff`, …). This fails closed; see Limits.
+  read-only (`cat`, `grep`, `head`, `ls`, …; not `git`, which can run configured programs).
+  This fails closed; see Limits.
 
 Paths are resolved through symlinks, `..`, `./` and `//` before matching, and gate state is
 read for the repo the artefact lands in, not the repo the session happens to sit in.
@@ -47,7 +48,7 @@ written only by `record-gate.sh`, which runs when the user types `/gate`:
   model. Command expansion does not go through `PreToolUse` hooks, so the user's own `/gate`
   is not blocked.
 - `enforce-gate.sh` blocks assistant `Bash` calls that name `record-gate.sh` unless they are
-  plainly read-only (`git add`, `grep`, …) or the bare `--status` call, any `Bash` call that
+  plainly read-only (`cat`, `grep`, …) or the bare `--status` call, any `Bash` call that
   names the state directory, and any `Write`/`Edit`/`MultiEdit` that resolves into it. This
   holds whatever the gate state and ignores `CPP_GATES_OVERRIDE`.
 
@@ -142,12 +143,14 @@ Set `CPP_HOOKS_DISABLE=1` in the environment to bypass for one session. Use spar
 - **Pattern matching is heuristic.** A determined paste of base64'd secrets won't be caught. Hooks raise the floor; they don't replace judgment.
 - **Gate enforcement fails open if `jq` is missing.** Blocking every tool call on a tooling
   gap would be worse than the gap, so `enforce-gate.sh` warns loudly and exits 0. Install `jq`.
-- **The gate's `Bash` checks fail closed, but they read text, not intent.** Indirection gets
-  past any text check: a script written elsewhere and then run, a name split across quotes
-  (`rec''ord-gate.sh`), a path built at run time. The gate stops the routes a model falls back
-  to when blocked; it is not a sandbox against a model working to defeat it. A hard guarantee
-  needs `~/.cpp-harness` to be unwritable from the session (OS permissions or Claude Code's
-  Bash sandbox) — not yet evaluated together with `/gate`, which must still write there.
+- **The gate's `Bash` checks fail closed, but they read text, not intent.** Names are matched
+  after quote and backslash removal and paths after symlink resolution, but indirection gets
+  past any text check: a script written elsewhere and then run, a name built from a variable
+  at run time. The gate stops the routes a model falls back to when blocked; it is not a
+  sandbox against a model working to defeat it.
+- **Claude Code's Bash sandbox is not a drop-in fix.** It would make `~/.cpp-harness`
+  unwritable from the model's shell, but it confines `/gate`'s own recorder too, so `/gate`
+  fails with it on (checked on Claude Code 2.1.300; `excludedCommands` did not exempt it).
 - **Hooks run on the user's machine.** They aren't a server-side control — anyone editing `settings.json` can disable them, and so can an assistant with unrestricted `Edit` on the hook scripts or settings.
 - **No replacement for branch protection.** Server-side rules in Azure DevOps / GitHub remain the authoritative gate.
 
