@@ -1,0 +1,681 @@
+<title>D4 Collector Delivery Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=Source+Code+Pro:wght@400;500&display=swap">
+
+<style>
+:root {
+  --ground:      #f4f3f0;
+  --surface:     #fdfcfa;
+  --sunk:        #eae8e3;
+  --ink:         #1a1815;
+  --ink-soft:    #454039;
+  --ink-mute:    #78716a;
+  --rule:        #d9d5ce;
+  --rule-soft:   #e6e3dd;
+  --rule-hard:   #1a1815;
+  --accent:      #8c2f2a;
+  --accent-ink:  #6f2521;
+  --accent-soft: #f6e9e6;
+  --wait:        #6a6e78;
+  --wait-soft:   #e8e9ec;
+  --go:          #2f6042;
+  --go-soft:     #e4ece6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131211; --surface:#1b1a18; --sunk:#232120;
+    --ink:#eceae6; --ink-soft:#bcb7b0; --ink-mute:#8b857d;
+    --rule:#332f2c; --rule-soft:#282523; --rule-hard:#6b635c;
+    --accent:#e0857c; --accent-ink:#eda49c; --accent-soft:#2c1e1c;
+    --wait:#9aa0ab; --wait-soft:#24262a;
+    --go:#79bb95; --go-soft:#18251d;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#131211; --surface:#1b1a18; --sunk:#232120;
+  --ink:#eceae6; --ink-soft:#bcb7b0; --ink-mute:#8b857d;
+  --rule:#332f2c; --rule-soft:#282523; --rule-hard:#6b635c;
+  --accent:#e0857c; --accent-ink:#eda49c; --accent-soft:#2c1e1c;
+  --wait:#9aa0ab; --wait-soft:#24262a;
+  --go:#79bb95; --go-soft:#18251d;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.62;
+  margin: 0;
+  padding: 0 1.25rem 5rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 53rem; margin: 0 auto; }
+
+/* ---------- masthead ---------- */
+.mast {
+  border-top: 7px solid var(--rule-hard);
+  padding-top: 1.5rem;
+  margin-top: 2.5rem;
+}
+.kicker {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: .72rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--accent-ink); margin-bottom: .75rem;
+}
+h1 {
+  font-family: Bitter, Georgia, serif;
+  font-weight: 700; font-size: clamp(2rem, 5.2vw, 2.9rem);
+  line-height: 1.1; letter-spacing: -.012em;
+  margin: 0 0 .7rem; text-wrap: balance;
+}
+.standfirst {
+  font-size: 1.12rem; color: var(--ink-soft); max-width: 44rem;
+  margin: 0 0 1.5rem;
+}
+.meta {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: .55rem 1.5rem;
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  padding: .85rem 0; font-size: .87rem; color: var(--ink-soft);
+}
+.meta b {
+  display: block;
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-weight: 500; font-size: .69rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-mute); margin-bottom: .1rem;
+}
+
+/* ---------- sections ---------- */
+section { margin-top: 3.2rem; }
+h2 {
+  font-family: Bitter, Georgia, serif;
+  font-weight: 600; font-size: 1.42rem; line-height: 1.25;
+  letter-spacing: -.008em; margin: 0 0 .3rem;
+  display: flex; align-items: baseline; gap: .8rem;
+  border-bottom: 2px solid var(--rule-hard); padding-bottom: .55rem;
+}
+.sn {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: .78rem; font-weight: 500; color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+h3 {
+  font-family: Bitter, Georgia, serif;
+  font-weight: 600; font-size: 1.06rem; line-height: 1.3;
+  margin: 1.9rem 0 .35rem;
+}
+p { margin: .8rem 0; }
+.lede { color: var(--ink-soft); margin-top: .9rem; }
+
+/* ---------- tables ---------- */
+.tw { overflow-x: auto; margin: 1.2rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 34rem; }
+th {
+  text-align: left; vertical-align: bottom;
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-weight: 500; font-size: .68rem; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-mute);
+  border-bottom: 1px solid var(--rule-hard); padding: 0 .9rem .45rem 0;
+}
+td { vertical-align: top; padding: .68rem .9rem .68rem 0; border-bottom: 1px solid var(--rule-soft); }
+th:last-child, td:last-child { padding-right: 0; }
+td.num {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-soft);
+}
+
+/* ---------- stage cards ---------- */
+.stages { margin-top: 1.4rem; }
+.stage {
+  display: grid; grid-template-columns: 3.1rem 1fr; gap: 0 1.1rem;
+  border-top: 1px solid var(--rule); padding: 1.15rem 0;
+}
+.stage:last-child { border-bottom: 1px solid var(--rule); }
+.sid {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: 1.05rem; font-weight: 500; color: var(--accent);
+  padding-top: .06rem; font-variant-numeric: tabular-nums;
+}
+.stage h4 {
+  font-family: Bitter, Georgia, serif; font-weight: 600;
+  font-size: 1.03rem; margin: 0 0 .3rem; line-height: 1.3;
+}
+.stage p { margin: .45rem 0; }
+.facts {
+  display: flex; flex-wrap: wrap; gap: .35rem .5rem; margin-top: .7rem;
+}
+.chip {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: .69rem; letter-spacing: .03em;
+  border: 1px solid var(--rule); color: var(--ink-mute);
+  padding: .14rem .45rem; white-space: nowrap; background: var(--surface);
+}
+.chip b { color: var(--ink-soft); font-weight: 500; }
+.exit {
+  margin-top: .7rem; font-size: .89rem; color: var(--ink-soft);
+  border-left: 3px solid var(--go); padding: .1rem 0 .1rem .8rem;
+}
+.exit b {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--go); display: block;
+}
+
+/* ---------- pills ---------- */
+.pill {
+  display: inline-block;
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: .66rem; letter-spacing: .07em; text-transform: uppercase;
+  padding: .12rem .42rem; white-space: nowrap;
+}
+.p-block { background: var(--accent-soft); color: var(--accent-ink); }
+.p-wait  { background: var(--wait-soft);   color: var(--wait); }
+.p-go    { background: var(--go-soft);     color: var(--go); }
+
+/* ---------- callouts ---------- */
+.note {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  padding: 1rem 1.15rem; margin: 1.4rem 0;
+}
+.note h4 {
+  font-family: Bitter, Georgia, serif; font-weight: 600;
+  font-size: .98rem; margin: 0 0 .35rem;
+}
+.note p { margin: .4rem 0; font-size: .95rem; }
+.note :last-child { margin-bottom: 0; }
+
+ul { margin: .8rem 0; padding-left: 1.15rem; }
+li { margin: .38rem 0; }
+li::marker { color: var(--ink-mute); }
+
+code, .mono {
+  font-family: "Source Code Pro", ui-monospace, monospace;
+  font-size: .87em; background: var(--sunk);
+  padding: .06em .32em; border-radius: 2px;
+}
+
+/* ---------- figure ---------- */
+figure { margin: 1.8rem 0; }
+figure svg { display: block; width: 100%; max-width: 100%; height: auto; color: var(--ink); }
+figcaption {
+  font-size: .86rem; color: var(--ink-mute); margin-top: .7rem;
+  border-top: 1px solid var(--rule-soft); padding-top: .55rem;
+}
+.figwrap { overflow-x: auto; }
+
+/* ---------- footer ---------- */
+footer {
+  margin-top: 3.5rem; border-top: 2px solid var(--rule-hard);
+  padding-top: 1rem; font-size: .87rem; color: var(--ink-mute);
+}
+
+@media (max-width: 34rem) {
+  .stage { grid-template-columns: 1fr; gap: .3rem; }
+  .sid { padding-top: 0; }
+}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="kicker">Harness telemetry · decision D4</div>
+  <h1>Getting the collector built</h1>
+  <p class="standfirst">Attribution now lives in a file on a laptop. Until those files are gathered
+  somewhere, every harness number describes exactly one machine. This is the plan to close that —
+  three decisions, one pilot, four build workstreams, about a quarter.</p>
+  <div class="meta">
+    <span><b>Status</b> Awaiting decisions — no build started</span>
+    <span><b>Blocks</b> Nine of the ten metrics at programme scale</span>
+    <span><b>Duration</b> ~13 weeks from decision date</span>
+    <span><b>Owner</b> <i>[name]</i></span>
+  </div>
+</header>
+
+<section>
+  <h2><span class="sn">01</span> Why this is the blocking item</h2>
+  <p>The instrumentation is written and shipped. Hooks record which commits the harness helped
+  produce, <code>harness_metrics.py</code> reads them back, and the <code>/gate</code> command
+  captures accept/edit/reject per stage. None of it leaves the machine it runs on.</p>
+  <p>That was a deliberate choice — revision 2 moved AI attribution out of public git history,
+  because most CPP repositories are public and a marker in a commit message is permanent. The cost
+  of that choice is this plan. A report that says <em>38% assisted</em> while covering 40 of 120
+  developers is not a small error; it is a different claim.</p>
+  <p>Six of the ten metrics come from Azure DevOps, Jira and SonarQube and need no collector at
+  all. What the collector buys is the rest: adoption, per-skill usage, gate rejection rate, and —
+  through the <code>branch_pushed</code> join — the ability to split cycle time, review turnaround,
+  change failure and CI first-pass into assisted against unassisted. Without that split the harness
+  metrics describe the programme, not the harness.</p>
+</section>
+
+<section>
+  <h2><span class="sn">02</span> The gate — three decisions</h2>
+  <p class="lede">None of these are engineering questions, and each one changes the code. Nothing
+  should be written until all three are answered.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th style="width:26%">Question</th><th style="width:20%">Owner</th><th>What it changes</th><th style="width:16%">Answered when</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>How long is telemetry retained?</b></td>
+        <td>Measurement programme + IG</td>
+        <td>Workspace retention configuration, and whether an archive tier is needed for
+        year-on-year comparison.</td>
+        <td>A number, in months, written down.</td>
+      </tr>
+      <tr>
+        <td><b>Who may query it, and who may purge it?</b></td>
+        <td>Measurement programme + platform</td>
+        <td>The RBAC model, and whether the deletion promise made to developers can actually be
+        honoured centrally.</td>
+        <td>Two named groups, not two named people.</td>
+      </tr>
+      <tr>
+        <td><b>Can a dedicated Log Analytics workspace be created, and in which subscription?</b></td>
+        <td>Platform / landing zone owners</td>
+        <td>Everything. See below.</td>
+        <td>A subscription and a resource group.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <h4>The third question can stop the plan</h4>
+    <p>If the answer is “share an existing workspace”, do not proceed to build — re-open the
+    design first. A shared workspace means anyone holding reader on it can read developer
+    telemetry, and it means deletion cannot be scoped without touching unrelated data. A
+    workspace of its own is what turns “we hold this for twelve months, these named groups can
+    query it, and here is how it is deleted” from an assurance into a configuration.</p>
+  </div>
+
+  <h3>Two governance items on the same path</h3>
+  <p>Neither is strictly D4, but both must land before rollout and both have lead times measured
+  in weeks rather than days.</p>
+  <ul>
+    <li><b>The disclosure question (D3)</b> — what teams are told, and when, about what is
+    recorded. The team-facing note is drafted and published; it needs sign-off from whoever owns
+    the measurement programme, because it commits to things teams will hold the programme to.</li>
+    <li><b>Consultation</b> — departmental trade union side and staff engagement, before
+    programme-wide rollout. Five minutes now is far cheaper than retrofitting consent onto six
+    months of data.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="sn">03</span> The schedule</h2>
+  <p class="lede">Three streams run before the gate and are worth starting now; four run after it.
+  Weeks are relative to the decision date, not to today.</p>
+
+  <figure>
+    <div class="figwrap">
+    <svg viewBox="0 0 880 412" role="img" aria-label="Thirteen-week schedule. Baseline extract, decisions and consultation, the Azure workspace request and the manual pilot all run in weeks one to six. A build gate sits at the end of week six. After it, the shipper, ingest service, Azure build and monthly job run in parallel through week eleven, with dashboards and cutover in weeks eleven and twelve and a week of reserve.">
+      <defs>
+        <marker id="d4tick" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1,1 L7,4 L1,7 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <!-- week grid -->
+      <g stroke="currentColor" stroke-opacity=".14">
+        <line x1="228" y1="46" x2="228" y2="372"/>
+        <line x1="275.5" y1="46" x2="275.5" y2="372"/>
+        <line x1="323" y1="46" x2="323" y2="372"/>
+        <line x1="370.5" y1="46" x2="370.5" y2="372"/>
+        <line x1="418" y1="46" x2="418" y2="372"/>
+        <line x1="465.5" y1="46" x2="465.5" y2="372"/>
+        <line x1="560.5" y1="46" x2="560.5" y2="372"/>
+        <line x1="608" y1="46" x2="608" y2="372"/>
+        <line x1="655.5" y1="46" x2="655.5" y2="372"/>
+        <line x1="703" y1="46" x2="703" y2="372"/>
+        <line x1="750.5" y1="46" x2="750.5" y2="372"/>
+        <line x1="798" y1="46" x2="798" y2="372"/>
+        <line x1="845.5" y1="46" x2="845.5" y2="372"/>
+      </g>
+
+      <!-- week numbers -->
+      <g font-family="'Source Code Pro', monospace" font-size="10.5" fill="currentColor" fill-opacity=".5" text-anchor="middle">
+        <text x="251.75" y="38">W1</text><text x="299.25" y="38">2</text><text x="346.75" y="38">3</text>
+        <text x="394.25" y="38">4</text><text x="441.75" y="38">5</text><text x="489.25" y="38">6</text>
+        <text x="536.75" y="38">7</text><text x="584.25" y="38">8</text><text x="631.75" y="38">9</text>
+        <text x="679.25" y="38">10</text><text x="726.75" y="38">11</text><text x="774.25" y="38">12</text>
+        <text x="821.75" y="38">13</text>
+      </g>
+
+      <!-- row labels -->
+      <g font-family="'Source Sans 3', sans-serif" font-size="12.5" fill="currentColor">
+        <text x="0" y="64">Baseline extract — ADO + Jira</text>
+        <text x="0" y="98">Decisions &amp; consultation</text>
+        <text x="0" y="132">Azure workspace request</text>
+        <text x="0" y="166">Manual pilot — 5–10 devs</text>
+        <text x="0" y="217">A · Shipper</text>
+        <text x="0" y="251">B · Ingest service</text>
+        <text x="0" y="285">C · Azure build</text>
+        <text x="0" y="319">D · Monthly job</text>
+        <text x="0" y="353">Dashboards + cutover</text>
+      </g>
+
+      <!-- pre-gate bars: dashed = independent of D4 -->
+      <g fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-opacity=".5">
+        <rect x="228" y="52" width="190" height="18" stroke-dasharray="4 3"/>
+        <rect x="228" y="86" width="142.5" height="18"/>
+        <rect x="275.5" y="120" width="237.5" height="18" stroke-dasharray="4 3"/>
+        <rect x="323" y="154" width="190" height="18"/>
+      </g>
+
+      <!-- post-gate bars -->
+      <g fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-opacity=".55">
+        <rect x="513" y="205" width="95" height="18"/>
+        <rect x="513" y="239" width="142.5" height="18"/>
+        <rect x="513" y="273" width="142.5" height="18"/>
+        <rect x="513" y="307" width="237.5" height="18"/>
+        <rect x="703" y="341" width="95" height="18"/>
+      </g>
+
+      <!-- reserve -->
+      <rect x="798" y="341" width="47.5" height="18" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="3 3"/>
+      <text x="821.75" y="376" font-family="'Source Code Pro', monospace" font-size="9" fill="currentColor" fill-opacity=".45" text-anchor="middle">reserve</text>
+
+      <!-- gate -->
+      <line x1="513" y1="24" x2="513" y2="372" stroke="#8c2f2a" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <line x1="513" y1="190" x2="700" y2="190" stroke="#8c2f2a" stroke-width="1.2" marker-end="url(#d4tick)" opacity=".55"/>
+      <text x="519" y="19" font-family="'Source Code Pro', monospace" font-size="10.5" fill="#8c2f2a" letter-spacing=".05em">BUILD GATE</text>
+      <text x="519" y="186" font-family="'Source Sans 3', sans-serif" font-size="11.5" fill="#8c2f2a">decisions answered · pilot reported · workspace granted</text>
+
+      <!-- legend -->
+      <g font-family="'Source Sans 3', sans-serif" font-size="11" fill="currentColor" fill-opacity=".6">
+        <rect x="0" y="392" width="22" height="11" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-opacity=".5" stroke-dasharray="4 3"/>
+        <text x="30" y="401">independent of D4 — start now</text>
+        <rect x="238" y="392" width="22" height="11" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-opacity=".55"/>
+        <text x="268" y="401">gated on the decisions above</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Thirteen weeks from the decision date. The dashed bars do not depend on D4 and lose
+    value the longer they wait; the solid bars cannot start until the gate clears. Weeks 7–11 are
+    four parallel workstreams, which is what makes the quarter achievable — sequenced, it is closer
+    to five months.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="sn">04</span> Before the gate</h2>
+
+  <div class="stages">
+
+    <div class="stage">
+      <div class="sid">0a</div>
+      <div>
+        <h4>Baseline extract <span class="pill p-go">start now</span></h4>
+        <p>Three to six months of pre-harness cycle time, change failure rate and defect escape,
+        pulled from Azure DevOps and Jira. This does not depend on D4, on the pilot, or on anything
+        else in this plan.</p>
+        <p>It should start regardless of how D4 lands. Every comparison the measurement framework
+        makes is meaningless without it, and the history is cleanest now while adoption is still
+        narrow — once the harness is widespread there is no clean “before” left to extract.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> 3–5 days</span>
+          <span class="chip"><b>Owner</b> whoever holds ADO + Jira query access</span>
+          <span class="chip"><b>Depends on</b> nothing</span>
+        </div>
+        <div class="exit"><b>Exit</b> A stored dataset, with its extraction query, that the monthly
+        job can later compare against.</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="sid">0b</div>
+      <div>
+        <h4>Decisions and consultation <span class="pill p-block">blocking</span></h4>
+        <p>The three questions in section 02, plus the D3 disclosure sign-off and the union-side
+        conversation. Run them concurrently rather than in series — the workspace question in
+        particular has a platform-team queue in front of it.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> 2–3 weeks elapsed</span>
+          <span class="chip"><b>Owner</b> measurement programme owner</span>
+          <span class="chip"><b>Depends on</b> nothing</span>
+        </div>
+        <div class="exit"><b>Exit</b> Retention in months, two named groups, a subscription and
+        resource group, and a recorded consultation outcome.</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="sid">0c</div>
+      <div>
+        <h4>Azure workspace request <span class="pill p-wait">lead time</span></h4>
+        <p>Raise the request as soon as 0b answers the third question. Dedicated Log Analytics
+        workspace, private link scope, retention set, RBAC groups attached. Terraform, and the
+        programme already has the patterns — 64 <code>azurerm_log_analytics_workspace</code>
+        declarations and <code>azurerm_monitor_data_collection_rule</code> already in use.</p>
+        <p><b>Not Splunk</b>, which is the security and audit sink; routing developer-behaviour
+        telemetry there sends a signal the programme does not mean, and would very likely make
+        deletion impossible by design. <b>Not Application Insights</b>, which is built for
+        application performance and gives weaker retention and purge control over what is, in
+        substance, a research dataset.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> ~2 days of work, 4 weeks elapsed</span>
+          <span class="chip"><b>Owner</b> platform team</span>
+          <span class="chip"><b>Depends on</b> 0b question three</span>
+        </div>
+        <div class="exit"><b>Exit</b> An empty workspace exists, with retention and RBAC applied.</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="sid">0d</div>
+      <div>
+        <h4>Manual pilot <span class="pill p-block">must precede the build</span></h4>
+        <p>Five to ten volunteers, each running <code>harness_metrics.py --format json</code>
+        locally and sending the output by hand. It does not scale and is not meant to.</p>
+        <p>What it buys is finding out whether these are the right ten metrics, and how badly real
+        rebase, squash-merge and cherry-pick behaviour degrades attribution in practice — before a
+        quarter is spent on a pipeline that measures the wrong thing accurately. Include at least
+        one <code>cpp-ui-*</code> repo, to prove husky chaining across <code>post-commit</code> and
+        <code>pre-push</code>, and confirm the merge strategy per repo.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> 4 weeks elapsed, ~2 days each</span>
+          <span class="chip"><b>Owner</b> harness owner</span>
+          <span class="chip"><b>Depends on</b> volunteers, not on 0b</span>
+        </div>
+        <div class="exit"><b>Exit</b> A written pilot report: which metrics proved useful, the
+        observed index-health numbers, and any metric to drop or redefine before it is built into
+        a pipeline.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2><span class="sn">05</span> After the gate — four workstreams</h2>
+  <p class="lede">A, B and C are one shipping path and should be built by the same pair. D is
+  independent of all three and can run alongside from day one.</p>
+
+  <div class="stages">
+
+    <div class="stage">
+      <div class="sid">A</div>
+      <div>
+        <h4>The shipper</h4>
+        <p>A <code>SessionEnd</code> hook plus a daily catch-up, reading unshipped lines against a
+        watermark, queueing locally when offline and retrying. The <code>SessionEnd</code> wiring
+        already exists in <code>settings.example.json</code>; this is a second script alongside
+        <code>harness-telemetry.sh</code>.</p>
+        <p><b>Hard constraint: it is never called from the git hooks.</b> A network call on the
+        commit path puts a VPN drop or a slow endpoint between a developer and their own commit.
+        That property has been protected through every revision of this design and is not
+        negotiable for convenience.</p>
+        <p>The local JSONL stays the source of truth. That is also what keeps
+        <code>rm -rf ~/.cpp-harness</code> an honest deletion rather than a partial one.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> ~1 week</span>
+          <span class="chip"><b>Weeks</b> 7–8</span>
+          <span class="chip"><b>Depends on</b> B's endpoint contract</span>
+        </div>
+        <div class="exit"><b>Exit</b> A laptop offline for a week ships everything on reconnect,
+        with no duplicates and no gaps, and a killed endpoint never affects a commit.</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="sid">B</div>
+      <div>
+        <h4>The ingest service <span class="pill p-block">easiest to get wrong</span></h4>
+        <p>A small service on the mgmt gateway. It authenticates the developer through Entra,
+        checks group membership, <b>discards the identity</b>, and forwards to the Logs Ingestion
+        API under its own workload identity. Deployed the same way the environment dashboard is,
+        and profiled well below it — that runs at 100m CPU and 128Mi under two hundred concurrent
+        users, and this does strictly less work.</p>
+        <p>Posting straight to a data collection endpoint needs no service at all and will be
+        proposed as a simplification. Reject it. A laptop cannot use Managed Identity, and the hard
+        rule against SAS tokens, connection strings and account keys rules out every shared-secret
+        route — so the developer authenticates as themselves either way. Direct posting puts that
+        identity at the front door, and “we do not know who sent this” becomes a statement about
+        which table we query rather than about what exists.</p>
+        <p>The difference between <em>not stored</em> and <em>not collected</em> is exactly the
+        difference this revision was written to protect. Rebuilding identifiability at the ingest
+        layer by accident would be a worse outcome than never having moved attribution out of the
+        commit at all.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> 2–3 weeks</span>
+          <span class="chip"><b>Weeks</b> 7–9</span>
+          <span class="chip"><b>Depends on</b> 0c workspace</span>
+        </div>
+        <div class="exit"><b>Exit</b> A load test confirms the profile, and a review confirms no
+        caller identity is written to the workspace, logged by the service, or recoverable from
+        its traces.</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="sid">C</div>
+      <div>
+        <h4>Azure build-out</h4>
+        <p>Data collection rule and endpoint, table schema, private link, workload identity for the
+        ingest service, purge runbook. Follows the workspace from 0c. Mostly a platform-team ticket
+        against existing patterns rather than new work.</p>
+        <p>The purge runbook is the part that is easy to defer and should not be: the deletion
+        promise made to developers is only credible if someone has actually executed it once, on
+        test data, and written down how long it took.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> 2–3 weeks</span>
+          <span class="chip"><b>Weeks</b> 7–9</span>
+          <span class="chip"><b>Depends on</b> 0c</span>
+        </div>
+        <div class="exit"><b>Exit</b> A test record ships end to end, and a rehearsed purge removes
+        it.</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="sid">D</div>
+      <div>
+        <h4>The monthly job <span class="pill p-wait">largest piece</span></h4>
+        <p>A scheduled Azure DevOps pipeline on <code>MDV-ADO-AGENTS-01</code>, which already holds
+        ADO, Jira and Sonar access. It pulls the six metrics <code>harness_metrics.py</code>
+        deliberately refuses to compute, joins <code>branch_pushed</code> to PR source branches for
+        the assisted/unassisted split, and writes to Grafana at
+        <span class="mono">grafana.mgmt01.dev.nl.cjscp.org.uk</span>. No new presentation tool.</p>
+        <p>Write it knowing telemetry arrives in bursts. The mgmt gateway is internal, so an empty
+        day is not evidence of an idle day — the job must not read a quiet Friday as a drop in
+        adoption.</p>
+        <p>Every report it produces states its own coverage. Speed metrics render next to their
+        counter-metrics or not at all: cycle time beside change failure rate, review turnaround
+        beside comments per PR.</p>
+        <div class="facts">
+          <span class="chip"><b>Effort</b> 3–4 weeks</span>
+          <span class="chip"><b>Weeks</b> 7–11</span>
+          <span class="chip"><b>Depends on</b> 0a baseline, not on A–C</span>
+        </div>
+        <div class="exit"><b>Exit</b> One month of real data renders on the dashboard, with
+        coverage stated, and reconciles against the pilot's hand-collected numbers.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2><span class="sn">06</span> Effort and ownership</h2>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Workstream</th><th>Owner</th><th class="num">Effort</th><th class="num">Weeks</th><th>Blocked by</th></tr></thead>
+    <tbody>
+      <tr><td>0a Baseline extract</td><td>ADO/Jira access holder</td><td class="num">3–5 d</td><td class="num">1–4</td><td>—</td></tr>
+      <tr><td>0b Decisions &amp; consultation</td><td>Measurement programme</td><td class="num">2–3 wk elapsed</td><td class="num">1–3</td><td>—</td></tr>
+      <tr><td>0c Workspace request</td><td>Platform</td><td class="num">~2 d</td><td class="num">2–6</td><td>0b</td></tr>
+      <tr><td>0d Manual pilot</td><td>Harness owner</td><td class="num">4 wk elapsed</td><td class="num">3–6</td><td>volunteers</td></tr>
+      <tr><td>A Shipper</td><td>Harness owner</td><td class="num">1 wk</td><td class="num">7–8</td><td>gate, B contract</td></tr>
+      <tr><td>B Ingest service</td><td>Platform + harness</td><td class="num">2–3 wk</td><td class="num">7–9</td><td>gate, 0c</td></tr>
+      <tr><td>C Azure build-out</td><td>Platform</td><td class="num">2–3 wk</td><td class="num">7–9</td><td>gate, 0c</td></tr>
+      <tr><td>D Monthly job</td><td>Data / delivery insight</td><td class="num">3–4 wk</td><td class="num">7–11</td><td>gate, 0a</td></tr>
+      <tr><td>Dashboards + cutover</td><td>Harness owner</td><td class="num">1–2 wk</td><td class="num">11–12</td><td>A–D</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Roughly two people for the build phase, plus platform-team time that is mostly queue rather
+  than effort. The single largest risk to the schedule is not any of the four workstreams — it is
+  0c sitting in a platform queue while weeks 7 onward wait on it.</p>
+</section>
+
+<section>
+  <h2><span class="sn">07</span> Done means</h2>
+  <ul>
+    <li>A developer commits, closes their session, and the event reaches the workspace without ever
+    having waited on a network call.</li>
+    <li>A monthly report covers more than one machine and <b>states what share of eligible
+    developers it covers</b>, on the report itself, every month.</li>
+    <li>Cycle time, review turnaround, change failure rate and CI first-pass render split assisted
+    against unassisted, each next to its counter-metric.</li>
+    <li>Someone has executed a purge on test data and written down what it removed and how long
+    it took.</li>
+    <li>A reviewer with workspace access cannot identify a developer from the data, and a reviewer
+    of the ingest service can confirm the caller identity is discarded rather than stored.</li>
+    <li><code>CPP_HARNESS_TELEMETRY=off</code> still suppresses everything, and the opt-out rate is
+    reported rather than engineered around.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="sn">08</span> What this still will not fix</h2>
+  <p class="lede">Worth stating now, because it shapes how the first reports are read.</p>
+  <ul>
+    <li><b>Coverage stays a caveat, not a solved problem.</b> A report covers the machines that
+    reported. <em>Untracked</em> must never be read as <em>unassisted</em>, and the reverse reading
+    will be made by someone in the first month unless the report is designed to prevent it.</li>
+    <li><b>Bursty arrival.</b> The mgmt gateway is internal, so telemetry lands when people
+    connect. Daily granularity is not trustworthy; weekly is.</li>
+    <li><b>Squash-merge and cherry-pick still lose attribution.</b> The PR-level join recovers
+    squash-merge; cherry-pick has no fix, because git does not fire <code>post-rewrite</code> for
+    it. It is an accepted undercount, and it biases against the harness, which is the safer
+    direction.</li>
+    <li><b>Uneven install looks identical to non-use.</b> The reader prints the
+    <code>core.hooksPath</code> check for exactly this reason, and the collector does not change
+    it.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="sn">09</span> The ask</h2>
+  <p>Two things, and the second is free.</p>
+  <p><b>Answer the three questions in section 02</b>, or say who should. Until they are answered
+  the build cannot start, and the instrumentation already installed on developers' machines
+  accumulates data nobody can read.</p>
+  <p><b>Let the baseline extract start now.</b> It is three to five days of work, it depends on
+  nothing in this plan, and it gets harder every week adoption widens. If D4 is ultimately declined,
+  the baseline is still worth having.</p>
+</section>
+
+<footer>
+  <p>Companion to the harness attribution and telemetry design document (revision 2.1, section 08)
+  and the harness measurement framework. Prepared by <i>[name]</i> · <i>[date]</i>.</p>
+</footer>
+
+</div>

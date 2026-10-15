@@ -1,6 +1,59 @@
-# Validation scripts
+# Scripts
 
-`validate_claude_config.py` runs the checks CI needs that Claude Code's
+| Script | Purpose | Dependencies |
+|---|---|---|
+| `validate_claude_config.py` | Repo/marketplace consistency checks. Runs in CI. | PyYAML |
+| `harness_metrics.py` | Reports the harness measurement metrics from telemetry events and the local commit attribution index. | stdlib only |
+
+## `harness_metrics.py`
+
+Reads the local JSONL event log written by `.claude/hooks/harness-telemetry.sh` and the git
+hooks in `.claude/hooks/git/`, joins its `commit_recorded` SHAs against `git log` across the
+workspace, and reports the metrics from the
+[measurement framework](../docs/harness-measurement-framework.html) that those two sources
+support — adoption, per-skill and per-agent usage, repo coverage, pipeline abandonment,
+gate rejection rate, and assisted-commit share.
+
+Attribution is held locally and keyed by SHA rather than stamped into commit messages,
+because most CPP repositories are public. See
+[`docs/telemetry/attribution-index.md`](../docs/telemetry/attribution-index.md). The cost is
+that **the report only knows about machines whose logs you are reading** — a freshly cloned
+repo correctly shows 0% assisted. The `Index health` block in the output quantifies that
+gap; read it before quoting the percentage.
+
+```bash
+# The monthly review
+python scripts/harness_metrics.py --repos ~/cpp --since 30 --eligible 40
+
+# Paste-ready for Confluence
+python scripts/harness_metrics.py --format markdown > monthly-review.md
+
+# For a collector
+python scripts/harness_metrics.py --format json | jq .
+```
+
+| Flag | Default | Notes |
+|---|---|---|
+| `--events` | `~/.cpp-harness/events` | Point at a directory of collected logs to report across machines |
+| `--repos` | parent of this repo | Workspace root; scanned two levels deep for git repos |
+| `--since` | `90` | Window in days |
+| `--eligible` | — | Eligible developer count. Without it the adoption percentage is blank, and adoption without a denominator is not a metric |
+| `--total-repos` | `145` | Coverage denominator |
+| `--no-git` | off | Skip the git scan (faster; drops attribution) |
+
+The `--since` window applies to the metrics, not to the index: the event log is always read
+whole, because a rebase outside the window can rewrite a SHA a commit inside it depends on.
+
+Read-only — it runs `git log` and nothing else.
+
+**It deliberately does not compute** change failure rate, defect escape rate, PR review
+turnaround, cycle time, CI first-pass rate, or the SonarQube trend. Those need Azure
+DevOps, Jira, and SonarQube, and the report lists them with the API each requires rather
+than substituting a local proxy that would read as the real thing.
+
+## `validate_claude_config.py`
+
+Runs the checks CI needs that Claude Code's
 built-in `/plugin validate` does not cover: cross-repo consistency with the
 `agentic-plugins-marketplace`, pointer-stub integrity, CLAUDE.md / README.md
 file-reference checks, and dangling skill references from agents and skills.

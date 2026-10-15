@@ -69,7 +69,21 @@ gh pr create --base main --fill
 4. **CLAUDE.md path references**: The orchestrator `CLAUDE.md` references
    `context/*.md` and `skills/*` with relative paths. After install those paths
    resolve under the plugin root — verified in step 4.
-5. **Version**: Starts at `0.1.0`. Bump per the marketplace's semver convention.
+5. **Version**: Now `1.2.0`. Bump per the marketplace's semver convention.
+6. **Telemetry consent**: `hooks/hooks.json` also activates `harness-telemetry.sh`
+   on every consumer. It writes only anonymous, local JSONL (no prompt text, file
+   contents, absolute paths, or developer identity) and honours
+   `CPP_HARNESS_TELEMETRY=off` — but it is still usage data about people, so the
+   marketplace listing must say so plainly, and rollout should be announced before
+   it is enabled programme-wide. See `docs/telemetry/attribution-index.md#governance`.
+7. **Git hooks are not installed by the plugin.** `hooks/git/` ships with the
+   plugin but git cannot load it from there; each developer runs one
+   `git config --global core.hooksPath` command. Without it, no commit attribution
+   is recorded and only the usage event log is populated.
+8. **No AI marker reaches git history.** Attribution is a local SHA index, not a
+   commit trailer — a deliberate choice because most CPP repos are public. If a
+   reviewer proposes "just add a trailer, it's simpler", the reasoning is in
+   `docs/telemetry/attribution-index.md#why-not-a-commit-trailer`.
 
 ## Keeping plugin-draft in sync with `.claude/`
 
@@ -86,6 +100,7 @@ cp "$SRC/CLAUDE.md"              "$DEST/CLAUDE.md"
 cp "$SRC/.claude/agents/"*.md    "$DEST/agents/"
 cp -R "$SRC/.claude/skills/"*    "$DEST/skills/"
 cp "$SRC/.claude/hooks/"*.sh     "$DEST/hooks/"
+cp -R "$SRC/.claude/hooks/git"   "$DEST/hooks/"
 cp -R "$SRC/.claude/commands/"*  "$DEST/commands/"
 cp "$SRC/.claude/context/"*.md   "$DEST/context/"
 ```

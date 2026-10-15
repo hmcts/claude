@@ -13,6 +13,27 @@ Hooks block tool calls and prompts when input matches a known-bad pattern. They 
 | `guard-bash.sh` | `PreToolUse:Bash` | `--no-verify`, `--no-gpg-sign`, `--dangerously-skip-permissions`, force-push to `main`/`master`/`develop`/`release/*`, `kubectl --context …prod…`, `az aks …prod…`, prod DB connections, `rm -rf` on workspace roots. |
 | `guard-paths.sh` | `PreToolUse:Read\|Write\|Edit` | `.env*` (allows `.env.example`/`.sample`/`.template`/`.dist`), `kubeconfig*`, SSH private keys, `credentials*.json`, `*.pem`/`*.key`/`*.pfx`/`*.p12`, paths under `secrets/`. Edits/writes to prod Helm values and prod Flux configs. |
 
+## Telemetry (non-blocking)
+
+These do not block anything. They record harness usage for the
+[measurement framework](../../docs/harness-measurement-framework.html).
+
+| Script | Hook events | What it records |
+|---|---|---|
+| `harness-telemetry.sh` | `SessionStart`, `SessionEnd`, `Stop`, `PostToolUse:Skill\|Task\|Agent\|Write\|Edit` | Anonymous usage events to `~/.cpp-harness/events/*.jsonl` — session lifecycle, per-skill and per-agent invocations, artefact writes. No prompt text, file contents, absolute paths, or developer identity. Always exits 0. |
+| `record-gate.sh` | invoked by `/gate`, not a hook | Human-gate decisions (`accept`/`edit`/`reject` + fixed reason code) per pipeline stage. |
+| `git/post-commit` | git hook, installed via `core.hooksPath` | Records the commit's SHA against the live session, in the **local index only**. Writes nothing into the commit message. |
+| `git/post-rewrite` | git hook | Follows attribution across `git commit --amend` and `git rebase`, so tidying a branch does not orphan it. |
+| `git/pre-push` | git hook | Records which remote branch carried the commits — the join key for PR-level metrics in Azure DevOps. |
+
+All three chain to the repo's own hook of the same name (husky first), because
+`core.hooksPath` is global. Nothing about AI assistance is written into git history: most
+CPP repos are public, and that marker would be permanent and unretractable.
+
+Install and opt-out: [`docs/telemetry/installing.md`](../../docs/telemetry/installing.md).
+Attribution spec: [`docs/telemetry/attribution-index.md`](../../docs/telemetry/attribution-index.md).
+Disable with `CPP_HARNESS_TELEMETRY=off` (telemetry only) or `CPP_HOOKS_DISABLE=1` (everything).
+
 ## Mapping to Don'ts
 
 | Don't (from guidelines) | Enforced by |

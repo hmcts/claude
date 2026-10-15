@@ -1,0 +1,539 @@
+<title>Measuring the SDLC Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --ground: #f6f7f9;
+  --surface: #ffffff;
+  --surface-sunk: #eef0f4;
+  --ink: #12161d;
+  --ink-soft: #3d4757;
+  --ink-mute: #6b7583;
+  --rule: #dce0e7;
+  --rule-soft: #e8ebf0;
+  --accent: #25457e;
+  --accent-soft: #e6ecf7;
+  --counter: #8a4a1f;
+  --counter-soft: #f6ece3;
+  --good: #1f6b4a;
+  --shadow: 0 1px 2px rgba(18,22,29,.05), 0 8px 24px -16px rgba(18,22,29,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1116;
+    --surface: #161a21;
+    --surface-sunk: #1d222b;
+    --ink: #e7eaef;
+    --ink-soft: #b6bec9;
+    --ink-mute: #858e9c;
+    --rule: #2a313c;
+    --rule-soft: #232932;
+    --accent: #8cabe4;
+    --accent-soft: #1c2739;
+    --counter: #dda06a;
+    --counter-soft: #2b2118;
+    --good: #6cbf95;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e1116;
+  --surface: #161a21;
+  --surface-sunk: #1d222b;
+  --ink: #e7eaef;
+  --ink-soft: #b6bec9;
+  --ink-mute: #858e9c;
+  --rule: #2a313c;
+  --rule-soft: #232932;
+  --accent: #8cabe4;
+  --accent-soft: #1c2739;
+  --counter: #dda06a;
+  --counter-soft: #2b2118;
+  --good: #6cbf95;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0 1.25rem 6rem;
+}
+
+.wrap { max-width: 50rem; margin: 0 auto; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  padding: 4.5rem 0 2rem;
+  border-bottom: 2px solid var(--ink);
+}
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .69rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1.1rem;
+}
+h1 {
+  font-family: Newsreader, Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.4rem, 6.5vw, 3.6rem);
+  line-height: 1.06;
+  letter-spacing: -.015em;
+  text-wrap: balance;
+  margin: 0 0 1rem;
+}
+.standfirst {
+  font-family: Newsreader, Georgia, serif;
+  font-size: 1.28rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 34rem;
+  margin: 0;
+}
+.masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.5rem;
+  margin-top: 1.75rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .72rem;
+  color: var(--ink-mute);
+  letter-spacing: .02em;
+}
+
+/* ---------- sections ---------- */
+
+section { padding-top: 3.5rem; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: .9rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: .6rem;
+  margin-bottom: 1.6rem;
+}
+.sec-num {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .72rem;
+  color: var(--accent);
+  letter-spacing: .08em;
+  flex: none;
+  padding-top: .25rem;
+}
+h2 {
+  font-family: Newsreader, Georgia, serif;
+  font-weight: 500;
+  font-size: 1.72rem;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+  margin: 0;
+  text-wrap: balance;
+}
+h3 {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-weight: 600;
+  font-size: .96rem;
+  letter-spacing: .005em;
+  margin: 2rem 0 .7rem;
+}
+p { margin: 0 0 1rem; max-width: 40rem; }
+p.lede { color: var(--ink-soft); }
+strong { font-weight: 600; }
+em { font-style: italic; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible, .stage:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+code, .mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .85em;
+}
+code {
+  background: var(--surface-sunk);
+  padding: .1em .34em;
+  border-radius: 3px;
+}
+
+/* ---------- rules panel ---------- */
+
+.rules { display: grid; gap: 1rem; }
+.rule-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  padding: 1.15rem 1.35rem;
+  box-shadow: var(--shadow);
+}
+.rule-card h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.rule-card p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+
+/* ---------- anti-metrics ---------- */
+
+.anti {
+  background: var(--counter-soft);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 1.2rem 1.4rem;
+}
+.anti ul { margin: .5rem 0 0; padding-left: 1.1rem; }
+.anti li { margin-bottom: .35rem; color: var(--ink-soft); }
+.anti li::marker { color: var(--counter); }
+.anti-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .69rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--counter);
+}
+
+/* ---------- metric tables ---------- */
+
+.tablewrap { overflow-x: auto; margin-bottom: .5rem; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .93rem;
+  min-width: 30rem;
+}
+th {
+  text-align: left;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--rule);
+  padding: 0 1rem .5rem 0;
+  vertical-align: bottom;
+}
+td {
+  padding: .68rem 1rem .68rem 0;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top;
+  color: var(--ink-soft);
+}
+td:first-child { color: var(--ink); font-weight: 500; width: 45%; }
+th:last-child, td:last-child { padding-right: 0; }
+.tag-counter {
+  color: var(--counter);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .78rem;
+}
+
+/* ---------- pipeline strip ---------- */
+
+.stages {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 3px;
+  margin: 1.4rem 0 1rem;
+}
+.stage {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .6rem .4rem .7rem;
+  text-align: center;
+  border-radius: 2px;
+}
+.stage.gated { border-top: 3px solid var(--accent); }
+.stage.auto { border-top: 3px solid var(--rule); }
+.stage-n {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .68rem;
+  color: var(--ink-mute);
+  display: block;
+}
+.stage-name {
+  font-size: .74rem;
+  line-height: 1.25;
+  display: block;
+  margin-top: .25rem;
+  color: var(--ink);
+  hyphens: auto;
+}
+.stage.auto .stage-name { color: var(--ink-mute); }
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .7rem;
+  color: var(--ink-mute);
+  flex-wrap: wrap;
+}
+.swatch {
+  display: inline-block;
+  width: 1.4rem;
+  height: 3px;
+  vertical-align: middle;
+  margin-right: .4rem;
+}
+.swatch.on { background: var(--accent); }
+.swatch.off { background: var(--rule); }
+
+/* ---------- instrumentation ---------- */
+
+.instr { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.instr-row {
+  display: grid;
+  grid-template-columns: 13rem 1fr;
+  gap: 1.2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.instr-src {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .8rem;
+  color: var(--accent);
+  line-height: 1.45;
+  padding-top: .12rem;
+}
+.instr-row p { margin: 0; font-size: .93rem; color: var(--ink-soft); }
+@media (max-width: 34rem) {
+  .instr-row { grid-template-columns: 1fr; gap: .35rem; }
+  .stages { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+
+/* ---------- starting ten ---------- */
+
+.ten {
+  counter-reset: ten;
+  list-style: none;
+  padding: 0;
+  margin: 1.2rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 3px;
+}
+.ten li {
+  counter-increment: ten;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: .8rem 1rem .85rem 2.6rem;
+  position: relative;
+  font-size: .92rem;
+  line-height: 1.4;
+}
+.ten li::before {
+  content: counter(ten, decimal-leading-zero);
+  position: absolute;
+  left: .9rem;
+  top: .82rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .7rem;
+  color: var(--accent);
+}
+
+.closer {
+  margin-top: 3.5rem;
+  border-top: 2px solid var(--ink);
+  padding-top: 1.5rem;
+}
+.closer p {
+  font-family: Newsreader, Georgia, serif;
+  font-size: 1.18rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 36rem;
+}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Crime Common Platform · HMCTS SDLC Harness</p>
+  <h1>Measuring the SDLC Harness</h1>
+  <p class="standfirst">A measurement framework for the eight-stage Claude pipeline — what to track, what to refuse to track, and how to instrument it across 145 repositories.</p>
+  <div class="masthead-meta">
+    <span>8 pipeline stages</span>
+    <span>~15 skills</span>
+    <span>145 repositories</span>
+    <span>Azure DevOps · Jira · SonarQube</span>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>Two rules before any metric</h2></div>
+  <div class="rules">
+    <div class="rule-card">
+      <h3>Baseline before rollout</h3>
+      <p>Almost every number below is meaningless without three to six months of pre-harness history. Pull it from Azure DevOps and Jira now, while adoption is still narrow enough that the history is clean.</p>
+    </div>
+    <div class="rule-card">
+      <h3>Every speed metric needs a paired counter-metric</h3>
+      <p>Faster PRs mean nothing if change-failure rate doubles. Track them as pairs, never in isolation. Throughout this document, the <span class="tag-counter">counter-metric</span> column is not optional garnish — it is the half that makes the first half credible.</p>
+    </div>
+  </div>
+
+  <h3>And two anti-metrics to refuse outright</h3>
+  <div class="anti">
+    <span class="anti-label">Do not track</span>
+    <ul>
+      <li><strong>Lines of code generated.</strong> Rewards volume over judgement.</li>
+      <li><strong>Percentage of code written by Claude.</strong> Gameable within a sprint, and it measures input rather than outcome.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>Adoption &amp; harness health</h2></div>
+  <p class="lede">Leading indicators. You cannot attribute outcomes if nobody is using it, and programme-wide averages hide the truth.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Metric</th><th>Why it earns its place</th></tr></thead>
+      <tbody>
+        <tr><td>Weekly active devs ÷ eligible devs</td><td>The denominator matters — eight enthusiasts is not adoption</td></tr>
+        <tr><td>Sessions per active dev per week</td><td>Separates “tried it once” from “depends on it”</td></tr>
+        <tr><td>Per-agent and per-skill invocation counts</td><td>Which of the 8 stages and ~15 skills actually earn their keep. Expect a long tail of dead weight — delete it</td></tr>
+        <tr><td>Repo coverage (repos touched ÷ 145)</td><td>Reveals whether it works on <code>cpp-context-*</code> but falls over on Terraform or Angular</td></tr>
+        <tr><td>Abandonment rate</td><td>Sessions that start at stage 1 and never reach stage 5. High means the pipeline is too heavy for real work</td></tr>
+        <tr><td>4-week retention</td><td>Devs who tried it and stopped are your most informative population. Interview five of them</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The per-skill breakdown is the highest-value item here and the one teams routinely skip. It tells you what to invest in and what to cut.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>Flow &amp; productivity</h2></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Metric</th><th class="tag-counter">Paired counter-metric</th></tr></thead>
+      <tbody>
+        <tr><td>Cycle time: first commit → merged <em>(median and p90)</em></td><td>Change failure rate</td></tr>
+        <tr><td>Lead time: story In&nbsp;Progress → sandbox</td><td>Defect escape rate</td></tr>
+        <tr><td>PR review turnaround: open → first review → approval</td><td>Review depth — comments per PR must not collapse</td></tr>
+        <tr><td>Rework rate: commits pushed after first review</td><td>—</td></tr>
+        <tr><td>Time-to-first-PR for a new joiner on a repo</td><td>—</td></tr>
+        <tr><td>Time to scaffold a Spring Boot service: template skill → green CI</td><td>Template deviation rate (ADRs raised)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Watch p90, not just median.</strong> AI assistance typically compresses the tail — the “I have never touched this repo before” tasks — far more than the median. A median-only view will systematically understate the effect across a 145-repo estate.</p>
+  <p>Onboarding is the platform’s real pain, and time-to-first-PR is where the harness should shine loudest. Service scaffolding is the cleanest attributable win available: isolated, repeatable, and easy to time deliberately.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>Quality — the metrics that protect you</h2></div>
+  <p class="lede">Speed claims without these will not survive scrutiny from HMCTS assurance.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Metric</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Change failure rate</td><td>DORA. The single most important counter-metric in this document</td></tr>
+        <tr><td>Defect escape rate per story</td><td>Split by harness-assisted vs. not</td></tr>
+        <tr><td>Mean time to restore</td><td>DORA</td></tr>
+        <tr><td>SonarQube trend</td><td>Coverage, new-code coverage, critical/blocker issues, duplication — already wired into the parent POM chain, so free to collect</td></tr>
+        <tr><td>Coverage delta on harness-authored code</td><td>The A-TDD stage should move this measurably, or stage 4 is not working</td></tr>
+        <tr><td>Flaky test rate</td><td><code>cpp-apitests</code> and <code>cpp-ui-e2e-serenity</code>. AI-authored tests are a known flakiness source — watch it closely</td></tr>
+        <tr><td>CI first-pass rate</td><td>Green without a re-run. Directly reflects stage 5 and 7 quality</td></tr>
+        <tr><td>Hard-rule violations caught pre-merge</td><td>Secrets, Managed Identity bypasses, missing JSON logging — the harness’s own rules, made countable</td></tr>
+        <tr><td>WCAG 2.1 AA defects: audit vs. pre-merge</td><td>Accessibility is non-negotiable. This proves the shift-left actually happened</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>Gate rejection rate — the harness-specific one</h2></div>
+  <p>This is the metric worth building deliberately, because nothing off-the-shelf produces it. At each of the six human gates, record whether the reviewer <strong>accepted, edited, or rejected</strong> the agent’s artefact — and the edit distance on the ones they accepted.</p>
+
+  <div class="stages">
+    <div class="stage gated"><span class="stage-n">01</span><span class="stage-name">Require­ments</span></div>
+    <div class="stage gated"><span class="stage-n">02</span><span class="stage-name">Architec­ture</span></div>
+    <div class="stage gated"><span class="stage-n">03</span><span class="stage-name">User Story</span></div>
+    <div class="stage gated"><span class="stage-n">04</span><span class="stage-name">Test Specs</span></div>
+    <div class="stage auto"><span class="stage-n">05</span><span class="stage-name">Code</span></div>
+    <div class="stage gated"><span class="stage-n">06</span><span class="stage-name">Code Review</span></div>
+    <div class="stage auto"><span class="stage-n">07</span><span class="stage-name">Build &amp; Test</span></div>
+    <div class="stage gated"><span class="stage-n">08</span><span class="stage-name">Deploy Sandbox</span></div>
+  </div>
+  <p class="legend"><span><span class="swatch on"></span>Human gate — measurable</span><span><span class="swatch off"></span>Auto — inferred from CI</span></p>
+
+  <p>Read it in both directions. A <code>requirements-analyst</code> rejected 60% of the time is a prompt problem you can fix this week. A <code>code-reviewer</code> rejected 5% of the time may instead mean humans have stopped reading — which is the more dangerous failure, and invisible in every other metric here.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>Developer experience</h2></div>
+  <p class="lede">Quantitative data will not tell you whether people like this. Run a short quarterly survey — six to eight questions, two minutes.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Question</th><th>What it surfaces</th></tr></thead>
+      <tbody>
+        <tr><td>Perceived productivity change (5-point)</td><td>The headline the programme board will ask for</td></tr>
+        <tr><td>Confidence in harness output reaching production</td><td>Trust, which predicts adoption better than satisfaction does</td></tr>
+        <tr><td>Time lost <em>correcting</em> harness output</td><td class="tag-counter">The counter-metric for satisfaction</td></tr>
+        <tr><td>Cognitive load across 145 repos, before vs. now</td><td>The platform’s central DX problem</td></tr>
+        <tr><td>Frustration hotspots (free text)</td><td>Where the real defects are. Read every response</td></tr>
+        <tr><td>eNPS for the harness itself</td><td>Trendable across quarters</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">07</span><h2>Instrumenting it in your stack</h2></div>
+  <div class="instr">
+    <div class="instr-row">
+      <div class="instr-src">Local commit<br>SHA index</div>
+      <p><strong>Do this first.</strong> Record which commits the harness produced. Without it you cannot segment anything in sections 03 or 04, and retrofitting it later is impossible. Keep the marker <em>out</em> of the commit message — most CPP repos are public, and an AI-assistance trailer there is permanent and unretractable. Git hooks write the SHA to a local index instead; the assisted/unassisted split then lives in Azure DevOps, which is not public.</p>
+    </div>
+    <div class="instr-row">
+      <div class="instr-src">Claude Code<br>OTel telemetry</div>
+      <p>Set <code>CLAUDE_CODE_ENABLE_TELEMETRY</code> and export to your existing observability backend. Gives you session counts, tool calls, and token spend — most of section 02.</p>
+    </div>
+    <div class="instr-row">
+      <div class="instr-src">PostToolUse hook<br>in settings.json</div>
+      <p>The only reliable way to capture per-skill and per-agent invocations and gate decisions. A hook logging <code>Skill</code> and <code>Agent</code> calls to a shared store produces the breakdown in sections 02 and 05.</p>
+    </div>
+    <div class="instr-row">
+      <div class="instr-src">Azure DevOps<br>+ Jira APIs</div>
+      <p>Cycle time, lead time, change failure rate, CI first-pass rate, rework. All derivable from data you already hold.</p>
+    </div>
+    <div class="instr-row">
+      <div class="instr-src">SonarQube API</div>
+      <p>The full quality trend series, already collected by the parent POM chain. Pure reporting work, no new instrumentation.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">08</span><h2>A realistic starting set</h2></div>
+  <p>Do not build all of the above. Ten metrics, reviewed monthly, will tell you almost everything the full framework would.</p>
+  <ol class="ten">
+    <li>Weekly active devs ÷ eligible</li>
+    <li>Per-skill invocation counts</li>
+    <li>Cycle time — median and p90</li>
+    <li>PR review turnaround</li>
+    <li>Change failure rate</li>
+    <li>Defect escape rate</li>
+    <li>CI first-pass rate</li>
+    <li>SonarQube critical issues on new code</li>
+    <li>Gate rejection rate by stage</li>
+    <li>Quarterly DX survey</li>
+  </ol>
+</section>
+
+<div class="closer">
+  <p>Expect the honest answer at three months to be that adoption is uneven and two skills are doing eighty percent of the work. That is a useful finding, not a failure — and it is precisely the one that tells you where to spend the next quarter.</p>
+</div>
+
+</div>
