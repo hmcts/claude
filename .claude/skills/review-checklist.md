@@ -24,6 +24,13 @@ This overlay adds HMCTS-specific additions the `code-reviewer` agent must apply 
 - [ ] No PII in log statements
 - [ ] No new Critical or High Snyk findings introduced
 
+### Backward compatibility & conflicts
+- [ ] Every changed event, API, schema, Drools rule, or shared UI component is listed in the design's "Compatibility & Conflicts" section
+- [ ] Event and API changes are additive or versioned — nothing removed or renamed that an existing consumer uses
+- [ ] Liquibase changesets are non-destructive and include rollback
+- [ ] New user-facing behaviour that changes existing behaviour is behind a feature toggle, default off
+- [ ] `@regression` tests for affected journeys exist and pass; none deleted or loosened without justification
+
 ### Spring Boot template alignment (Spring Boot services)
 - [ ] `build.gradle`, `gradle/*.gradle`, `Dockerfile`, `logback.xml`, `.github/workflows/` unchanged from template (or ADR recorded)
 - [ ] `spring.application.name` and `management.metrics.tags.service` match the repo name
@@ -52,3 +59,4 @@ Run the `accessibility-check` skill (install `accessibility-check@agentic-plugin
 ### HMCTS scoring overrides
 - Any FAIL in **Accessibility** (UI story) → **block merge, must fix** (HMCTS treats a11y failures as equivalent to security failures)
 - Any unresolved **PII leak** in logs or test data → **block merge, must fix**
+- Any **unversioned breaking change** to an event, API, or schema with existing consumers → **block merge, must fix**

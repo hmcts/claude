@@ -64,9 +64,14 @@ Record the deployment timestamp and artefact reference.
 Execute the `@smoke`-tagged test scenarios from the feature file against the sandbox URL.
 These are the minimum viability checks — not the full regression suite.
 
+Then run the `@regression` scenarios for the affected journeys listed in the requirements
+"Impact on existing functionality" table, to confirm existing behaviour still works in sandbox.
+If the feature is toggled, run them with the toggle in its default (off) state first, then on.
+
 Report:
-- Scenarios run
+- Scenarios run (new `@smoke` and existing-journey `@regression` separately)
 - Pass / fail per scenario
+- Toggle state(s) tested
 - Sandbox base URL confirmed reachable
 
 ### Step 4 — Accessibility spot-check (UI stories)
@@ -83,6 +88,7 @@ Update `docs/pipeline/deploy-notes.md`:
 - Environment: sandbox / [namespace]
 - Deployed by: Claude deployer agent
 - Smoke tests: PASS ([N] scenarios)
+- Existing-journey regression: PASS ([N] scenarios) — toggle: [off/on/N/A]
 - Sandbox URL: [url]
 - Human approver: [name — to be filled by team]
 ```

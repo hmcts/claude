@@ -45,9 +45,27 @@ Identify and document:
 - **Constraints**: legislative (e.g. Courts Act, Data Protection Act), GDS mandates, MOJ policy
 - **Out of scope**: explicitly state what is deferred or excluded
 
+### Step 2a — Assess impact on existing functionality
+New behaviour must not silently change or contradict what users already rely on. Identify:
+- **Affected journeys**: existing user journeys, screens, and roles whose behaviour changes
+  (search the source material and `cp-knowledge-store` for journeys touching the same area)
+- **Affected contexts**: `cpp-context-*` / `cpp-mbd-*` / `cpp-ui-*` repos likely to change
+- **Changed behaviour**: anything existing users will see work differently — state it plainly,
+  never fold it into a new FR
+- **Work in flight**: open Jira epics or stories touching the same journeys or contexts
+  (search via Jira MCP); record each with its key
+- **Rollout need**: whether the change should ship behind a feature toggle so existing
+  behaviour is preserved until switch-on
+
+Every changed behaviour and every overlap with work in flight becomes an open question
+(Step 4) unless the source material explicitly resolves it.
+
 ### Step 3 — Derive acceptance criteria
 For every FR, produce ≥1 AC using the skill: skills/write-acceptance-criteria.md
 ACs must be measurable and testable. Vague ACs (e.g. "works correctly") are not acceptable.
+For every affected journey marked "None" in the impact table, add a regression AC stating
+that the existing behaviour is unchanged (e.g. "Given a user without the new role, when …,
+then the existing … is shown").
 
 ### Step 4 — Flag open questions
 List every ambiguity, missing actor, undefined edge case, or conflicting constraint
@@ -89,6 +107,14 @@ the user explicitly confirms the requirements are approved.**
 ## Acceptance criteria
 ### FR-001 — [name]
 - AC-001: Given [context], when [action], then [outcome]
+
+## Impact on existing functionality
+| Affected journey / role | Context(s) | Current behaviour | Change | Preserved by |
+|-------------------------|------------|-------------------|--------|--------------|
+| ...                     | ...        | ...               | None / Changed | Regression AC / Toggle / N/A |
+
+**Work in flight on the same area:** [Jira keys, or "None found"]
+**Feature toggle required:** [Yes — reason / No — reason]
 
 ## Constraints
 - [Legislative, policy, or platform constraints]
